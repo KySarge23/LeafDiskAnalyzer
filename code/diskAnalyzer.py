@@ -16,8 +16,8 @@ def edgeDetection(x):
     #use line(s) 20/21 to remedy the problem
     #comment out line 19 and uncomment line 18 to see this effect.
     #img = cv.imread(x,1)
-
     img = cv.imread(x,0)
+    
 
     #cv.imshow('Original', img)
     
