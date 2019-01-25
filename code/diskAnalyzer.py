@@ -24,10 +24,11 @@ def edgeDetection(x):
     #Converting img to RGB:
     #img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
 
-    edges = cv.Canny(img,100,200)
     #use canny algorithm for edge detection
     #see https://docs.opencv.org/3.4/da/d22/tutorial_py_canny.html
     #for more details.
+    edges = cv.Canny(img,100,200)
+
 
     #creation of subplots
     plt.subplot(121),plt.imshow(img,cmap='gray')
