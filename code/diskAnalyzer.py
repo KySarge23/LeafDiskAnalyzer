@@ -17,16 +17,19 @@ def edgeDetection(x):
     #comment out line 19 and uncomment line 18 to see this effect.
     #img = cv.imread(x,1)
     img = cv.imread(x,0)
-    
+
 
     #cv.imshow('Original', img)
-    
+
     #Converting img to RGB:
     #img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
-    
-    edges = cv.Canny(img,100,200) #use canny algorithm for edge detection see https://docs.opencv.org/3.4/da/d22/tutorial_py_canny.html for more details.
 
-    #creation of subplots 
+    edges = cv.Canny(img,100,200)
+    #use canny algorithm for edge detection
+    #see https://docs.opencv.org/3.4/da/d22/tutorial_py_canny.html
+    #for more details.
+
+    #creation of subplots
     plt.subplot(121),plt.imshow(img,cmap='gray')
     plt.title('Original Image')
     plt.subplot(122),plt.imshow(edges,cmap='gray')
@@ -36,6 +39,6 @@ def edgeDetection(x):
 def main():
     #retrieve image from photos folder and pass as param.
     edgeDetection('../photos/leafDiskMildew.png')
-    
+
 
 main()
