@@ -3,6 +3,9 @@ import cv2 as cv
 import matplotlib.image as mpimg
 from matplotlib import pyplot as plt
 
+imgPathArr = ['']*8 #initialize imagePath array
+
+
 def analyzeDisks(x):
     return NotImplemented
 
@@ -43,7 +46,8 @@ def edgeDetection(x):
 
 def main():
     imgPath = '../photos/leafDiskMildew.png'
-    edgeDetection(imgPath)
+    imgPathArr[0] = imgPath
+    edgeDetection(imgPathArr[0])
    
 
 main()
