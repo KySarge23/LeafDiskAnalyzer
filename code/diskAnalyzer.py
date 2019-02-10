@@ -1,16 +1,20 @@
 import numpy as np
 import cv2 as cv
 import matplotlib.image as mpimg
+import tkinter
+import os
+from pathlib import Path
+from tkinter import Tk as tk
+from tkinter.filedialog import askopenfilenames
 from matplotlib import pyplot as plt
 
-imgPathArr = ['']*8 #initialize imagePath array
+
 
 
 def analyzeDisks(x):
     return NotImplemented
 
-
-def edgeDetection(x):
+def cannyEdgeDetection(x):
     #second param: (1= color, 0= grayscale, -1 = unchanged)
     #however OCV uses BGR coloring and Matplot uses RGB coloring, so
     #when reading in with OCV, need to change to RGB if showing with matplot
@@ -31,23 +35,24 @@ def edgeDetection(x):
     #use canny algorithm for edge detection
     #see https://docs.opencv.org/3.4/da/d22/tutorial_py_canny.html
     #for more details.
-    edges = cv.Canny(imgG,100,200)
+    edges = cv.Canny(imgG,150,200)
 
     #Save image into photos folder for now. so can be used in analyzeDisks method()
-    mpimg.imsave("../photos/edges.png", edges)
-    
+    #mpimg.imsave("../photos/edges.png", edges)
 
-    #creation of subplots
-    plt.subplot(121),plt.imshow(imgC)
-    plt.title('Original Image')
-    plt.subplot(122),plt.imshow(edges,cmap='gray')
-    plt.title('Edge Dectection')
-    plt.show()
-
+    cv.imshow('Edge detection', edges) #show the edge detection photo in its own window
+    cv.waitKey(0) #wait 0 seconds 
+    cv.destroyAllWindows() #destroy all windows on press of any character
+              
 def main():
-    imgPath = '../photos/leafDiskMildew.png'
-    imgPathArr[0] = imgPath
-    edgeDetection(imgPathArr[0])
-   
+    tk().withdraw() #we dont want root window to pop up so we get hide it.
+    imgPath = input("Enter a date in the form of x-xx-xx\n")
+    imgPath = "../photos/" + imgPath
+    imgPaths = askopenfilenames(initialdir = os.path.abspath(imgPath)) #allow user to grab all images they wish to upload. this returns a tuple of strings
+    for path in imgPaths:  #for every image we clicked on in file explorer, run edgeDetection on it.
+       cannyEdgeDetection(path)
 
+    
+    
+    
 main()
