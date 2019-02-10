@@ -1,4 +1,3 @@
-
 import numpy as np
 import cv2 as cv
 import matplotlib.image as mpimg
@@ -9,7 +8,7 @@ from tkinter.filedialog import askopenfilenames
 from matplotlib import pyplot as plt
 
 
-#Authors: Kyle Sargent, 
+#Author(s): Kyle Sargent
 
 def analyzeDisks(x):
     return NotImplemented
@@ -48,10 +47,19 @@ def main():
     tk().withdraw() #we dont want root window to pop up so we get hide it.
     imgPath = input("Enter a date in the form of x-xx-xx xdpi\n")
     imgPath = "../photos/" + imgPath #based off hierarchy of files, is subject to change
-    print(os.path.abspath(imgPath))
-    imgPaths = askopenfilenames(initialdir = os.path.abspath(imgPath)) #converts the input retrieved from user into an absolute path, and opens a explorer in that file
 
-    #allow user to grab all images they wish to upload. this returns a tuple of strings
-    #for path in imgPaths:  #for every image we clicked on in file explorer, run edgeDetection on it.
-       #cannyEdgeDetection(path)
+    if os.path.exists(imgPath):
+        #askopenfilenames() does the following: allow user to grab all images they wish to upload Then this returns a tuple of strings
+        imgPaths = askopenfilenames(initialdir = os.path.abspath(imgPath)) #converts the input retrieved from user into an absolute path, and opens a explorer in that file
+
+        for path in imgPaths:  #for every image we clicked on in file explorer, run edgeDetection on it. #refactor if-else into own function later? maybe.
+           if os.path.exists(path): #validate the path
+               print("Valid path entered, staging for analyzing..")
+               #cannyEdgeDetection(path)
+               
+           else: #let user know the software has detected an invalid path
+               print("Invalid path detected, No file or directory resides in: \n" + path)
+               
+    #if the path input is not valid, then let user know without entering the loop.         
+    else: print("Invalid path detected, No directory found of: " + os.path.abspath(imgPath))
 main()
