@@ -1,15 +1,15 @@
+
 import numpy as np
 import cv2 as cv
 import matplotlib.image as mpimg
 import tkinter
 import os
-from pathlib import Path
 from tkinter import Tk as tk
 from tkinter.filedialog import askopenfilenames
 from matplotlib import pyplot as plt
 
 
-
+#Authors: Kyle Sargent, 
 
 def analyzeDisks(x):
     return NotImplemented
@@ -46,13 +46,12 @@ def cannyEdgeDetection(x):
               
 def main():
     tk().withdraw() #we dont want root window to pop up so we get hide it.
-    imgPath = input("Enter a date in the form of x-xx-xx\n")
-    imgPath = "../photos/" + imgPath
-    imgPaths = askopenfilenames(initialdir = os.path.abspath(imgPath)) #allow user to grab all images they wish to upload. this returns a tuple of strings
-    for path in imgPaths:  #for every image we clicked on in file explorer, run edgeDetection on it.
-       cannyEdgeDetection(path)
+    imgPath = input("Enter a date in the form of x-xx-xx xdpi\n")
+    imgPath = "../photos/" + imgPath #based off hierarchy of files, is subject to change
+    print(os.path.abspath(imgPath))
+    imgPaths = askopenfilenames(initialdir = os.path.abspath(imgPath))
 
-    
-    
-    
+    #allow user to grab all images they wish to upload. this returns a tuple of strings
+    #for path in imgPaths:  #for every image we clicked on in file explorer, run edgeDetection on it.
+       #cannyEdgeDetection(path)
 main()
