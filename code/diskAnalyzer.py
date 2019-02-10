@@ -49,7 +49,7 @@ def main():
     imgPath = input("Enter a date in the form of x-xx-xx xdpi\n")
     imgPath = "../photos/" + imgPath #based off hierarchy of files, is subject to change
     print(os.path.abspath(imgPath))
-    imgPaths = askopenfilenames(initialdir = os.path.abspath(imgPath))
+    imgPaths = askopenfilenames(initialdir = os.path.abspath(imgPath)) #converts the input retrieved from user into an absolute path, and opens a explorer in that file
 
     #allow user to grab all images they wish to upload. this returns a tuple of strings
     #for path in imgPaths:  #for every image we clicked on in file explorer, run edgeDetection on it.
