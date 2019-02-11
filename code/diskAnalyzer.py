@@ -14,6 +14,7 @@ def analyzeDisks(x):
     return NotImplemented
 
 def cannyEdgeDetection(x):
+    print("Edge Detection starting")
     #second param: (1= color, 0= grayscale, -1 = unchanged)
     #however OCV uses BGR coloring and Matplot uses RGB coloring, so
     #when reading in with OCV, need to change to RGB if showing with matplot
@@ -23,13 +24,13 @@ def cannyEdgeDetection(x):
     #comment out line 20 and uncomment line 21 to see this effect
     
     #Reading of the same photo, in color for displaying and grayscale for edgeDetection.
-    imgC = cv.imread(x,1)
+    #imgC = cv.imread(x,1)
     imgG = cv.imread(x,0)
 
     #cv.imshow('Original', img)
 
     #Converting img to RGB:
-    imgC = cv.cvtColor(imgC, cv.COLOR_BGR2RGB)
+    #imgC = cv.cvtColor(imgC, cv.COLOR_BGR2RGB)
 
     #use canny algorithm for edge detection
     #see https://docs.opencv.org/3.4/da/d22/tutorial_py_canny.html
@@ -40,22 +41,24 @@ def cannyEdgeDetection(x):
     #mpimg.imsave("../photos/edges.png", edges)
 
     cv.imshow('Edge detection', edges) #show the edge detection photo in its own window
-    cv.waitKey(0) #wait 0 seconds 
+    cv.waitKey(0) #wait "forerver" for more details go to: https://docs.opencv.org/2.4/modules/highgui/doc/user_interface.html?highlight=waitkey#waitkey
     cv.destroyAllWindows() #destroy all windows on press of any character
+    
+    print("Edge Detection Complete")
               
 def main():
     tk().withdraw() #we dont want root window to pop up so we get hide it.
-    imgPath = input("Enter a date in the form of x-xx-xx xdpi\n")
+    imgPath = input("Enter a date in the form of x-xx-xx xdpi\n") #retrieve user input
     imgPath = "../photos/" + imgPath #based off hierarchy of files, is subject to change
 
     if os.path.exists(imgPath):
         #askopenfilenames() does the following: allow user to grab all images they wish to upload Then this returns a tuple of strings
         imgPaths = askopenfilenames(initialdir = os.path.abspath(imgPath)) #converts the input retrieved from user into an absolute path, and opens a explorer in that file
-
+        
         for path in imgPaths:  #for every image we clicked on in file explorer, run edgeDetection on it. #refactor if-else into own function later? maybe.
            if os.path.exists(path): #validate the path
                print("Valid path entered, staging for analyzing..")
-               #cannyEdgeDetection(path)
+               cannyEdgeDetection(path)
                
            else: #let user know the software has detected an invalid path
                print("Invalid path detected, No file or directory resides in: \n" + path)
