@@ -48,21 +48,28 @@ def cannyEdgeDetection(x):
               
 def main():
     tk().withdraw() #we dont want root window to pop up so we get hide it.
-    imgPath = input("Enter a date in the form of x-xx-xx xdpi\n") #retrieve user input
+    imgPath = input("Enter a date in the form of x-xx-xx xdpi:\n") #retrieve user input
     imgPath = "../photos/" + imgPath #based off hierarchy of files, is subject to change
 
-    if os.path.exists(imgPath):
-        #askopenfilenames() does the following: allow user to grab all images they wish to upload Then this returns a tuple of strings
-        imgPaths = askopenfilenames(initialdir = os.path.abspath(imgPath)) #converts the input retrieved from user into an absolute path, and opens a explorer in that file
+
+    #start for tray input
+    trayInput = input("Enter they tray number(s) you wish to use:\n")
+    print(trayInput)
+    lst = trayInput.split(',')
+    print(lst)
+    
+#     #if os.path.exists(imgPath):
+#         #askopenfilenames() does the following: allow user to grab all images they wish to upload Then this returns a tuple of strings
+#         imgPaths = askopenfilenames(initialdir = os.path.abspath(imgPath)) #converts the input retrieved from user into an absolute path, and opens a explorer in that file
         
-        for path in imgPaths:  #for every image we clicked on in file explorer, run edgeDetection on it. #refactor if-else into own function later? maybe.
-           if os.path.exists(path): #validate the path
-               print("Valid path entered, staging for analyzing..")
-               cannyEdgeDetection(path)
+#         for path in imgPaths:  #for every image we clicked on in file explorer, run edgeDetection on it. #refactor if-else into own function later? maybe.
+#            if os.path.exists(path): #validate the path
+#                print("Valid path entered, staging for analyzing..")
+#                cannyEdgeDetection(path)
                
-           else: #let user know the software has detected an invalid path
-               print("Invalid path detected, No file or directory resides in: \n" + path)
+#            else: #let user know the software has detected an invalid path
+#                print("Invalid path detected, No file or directory resides in: \n" + path)
                
-    #if the path input is not valid, then let user know without entering the loop.         
-    else: print("Invalid path detected, No directory found of: " + os.path.abspath(imgPath))
+#     #if the path input is not valid, then let user know without entering the loop.         
+#     else: print("Invalid path detected, No directory found of: " + os.path.abspath(imgPath))
 main()
