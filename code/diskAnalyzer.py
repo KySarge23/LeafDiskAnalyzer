@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import numpy as np
 import cv2 as cv
 import matplotlib.image as mpimg
@@ -40,36 +42,45 @@ def cannyEdgeDetection(x):
     #Save image into photos folder for now. so can be used in analyzeDisks method()
     #mpimg.imsave("../photos/edges.png", edges)
 
+    print("Edge Detection Complete")
+    
     cv.imshow('Edge detection', edges) #show the edge detection photo in its own window
     cv.waitKey(0) #wait "forerver" for more details go to: https://docs.opencv.org/2.4/modules/highgui/doc/user_interface.html?highlight=waitkey#waitkey
     cv.destroyAllWindows() #destroy all windows on press of any character
+    print("Closing Window")
     
-    print("Edge Detection Complete")
               
 def main():
     tk().withdraw() #we dont want root window to pop up so we get hide it.
-    imgPath = input("Enter a date in the form of x-xx-xx xdpi:\n") #retrieve user input
-    imgPath = "../photos/" + imgPath #based off hierarchy of files, is subject to change
+    datePath = input("Enter a date in the form of x-xx-xx xdpi:\n") #retrieve user input
+    datePath = "../photos/" + datePath #based off hierarchy of files, is subject to change
 
+    #get tray number from user
+    trayPath = input("Enter the tray number(s) you wish to use in the form of '1-3' or '1,3,5': ")
+    #amend the path to specific folder.
+    trayPath = datePath + "/tray " + str(trayPath) #only works with single tray #s thus far.
 
-    #start for tray input
-    trayInput = input("Enter they tray number(s) you wish to use:\n")
-    print(trayInput)
-    lst = trayInput.split(',')
-    print(lst)
-    
-#     #if os.path.exists(imgPath):
-#         #askopenfilenames() does the following: allow user to grab all images they wish to upload Then this returns a tuple of strings
-#         imgPaths = askopenfilenames(initialdir = os.path.abspath(imgPath)) #converts the input retrieved from user into an absolute path, and opens a explorer in that file
+    print(trayPath)
+
+    #error checking against the filepath gained from the two inputs.
+    if os.path.exists(trayPath):
+        #askopenfilenames() does the following: allow user to grab all images they wish to upload Then this returns a tuple of strings
+        imgPaths = askopenfilenames(initialdir = os.path.abspath(trayPath)) #converts the input retrieved from user into an absolute path, and opens a explorer in that file
         
-#         for path in imgPaths:  #for every image we clicked on in file explorer, run edgeDetection on it. #refactor if-else into own function later? maybe.
-#            if os.path.exists(path): #validate the path
-#                print("Valid path entered, staging for analyzing..")
-#                cannyEdgeDetection(path)
+        for path in imgPaths:  #for every image we clicked on in file explorer, run edgeDetection on it. #refactor if-else into own function later? maybe.
+           if os.path.exists(path): #validate the path
+               print("Valid path entered, staging for analyzing..")
+               cannyEdgeDetection(path)
                
-#            else: #let user know the software has detected an invalid path
-#                print("Invalid path detected, No file or directory resides in: \n" + path)
+           else: #let user know the software has detected an invalid path
+               print("Invalid path detected, No file or directory resides in: \n" + path)
                
-#     #if the path input is not valid, then let user know without entering the loop.         
-#     else: print("Invalid path detected, No directory found of: " + os.path.abspath(imgPath))
+    #if the path input is not valid, then let user know without entering the loop.         
+    else: print("Invalid path detected, No directory found of: " + os.path.abspath(trayPath))
+
+
+
+
+
+
 main()
