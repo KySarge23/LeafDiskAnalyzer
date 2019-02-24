@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import numpy as np
 import cv2 as cv
 import matplotlib.image as mpimg
 import tkinter
