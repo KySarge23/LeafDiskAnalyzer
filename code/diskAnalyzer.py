@@ -28,6 +28,7 @@ def findCircle(x):
         #params are as follows: (image, center coords,bgr values, thickness)
         cv.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2)
         print(cv.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2))
+        
     cv.imshow('detected circles',cimg)
     cv.waitKey(0)
     cv.destroyAllWindows() 
