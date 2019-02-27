@@ -16,15 +16,23 @@ from matplotlib import pyplot as plt
 #Author(s): Kyle Sargent
 
 def findCircleArea(x):
+
+    """Area finding function, Will utilize HoughCircle method to detect circles
+       within the photo. Then will use that circle to find the area within it which
+       is what will be used later in the edge detection"""
+    
     img = cv.imread(x,0)
     img = cv.medianBlur(img,5)
     cimg = cv.cvtColor(img,cv.COLOR_GRAY2BGR)
 
     """The following lines can be used to have an algorithm detect circles for us.
        or can use the hard-coded version that is commented out below"""
+
     #params are as follows: (image, method = cv2.HOUGH_GRADIENT is the only one that works thus far, dp, minDist, parap1 = gradient value,
     #param2 = accumulator threshold value for method input, minRadius, maxRadius)
-    circles = cv.HoughCircles(img,cv.HOUGH_GRADIENT,1,190,
+    #for more details on HoughCircles, visit: http://www.bmva.org/bmvc/1989/avc-89-029.pdf or https://www.pyimagesearch.com/2014/07/21/detecting-circles-images-using-opencv-hough-circles/ 
+
+    circles = cv.HoughCircles(img,cv.HOUGH_GRADIENT,1,150,
                                         param1=50,param2=30,minRadius=0,maxRadius=0)
     
     circles = np.uint8(np.around(circles))
@@ -36,7 +44,7 @@ def findCircleArea(x):
         rad = circ[2] #grab the radius
 
     """The following lines can be used to hard-code in the circle
-    or can use above to use an algorithm to detect the circle"""
+       or can use above to use an algorithm to detect the circle"""
     
     #center = (int(w / 2), int(h / 2))
     #rad = 195
@@ -50,6 +58,11 @@ def findCircleArea(x):
     return area
      
 def cannyEdgeDetection(x):
+    """Edge detection function. Utilizes canny edge detection to detect edges found in the picture
+       input will be cropped image from the findCircleArea() function.
+       output should be an image with found mildew/edges"""
+
+    
     print("Edge Detection starting")
     
     #second param: (1= color, 0= grayscale, -1 = unchanged)
@@ -113,9 +126,5 @@ def main():
 
     #if the path input is not valid, then let user know without entering the loop.         
     #else: print("Invalid path detected, No directory found of: " + os.path.abspath(trayPath)
-
-
-
-
 
 main()
