@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import math
 import cv2 as cv
 import numpy as np
 import matplotlib.image as mpimg
@@ -10,30 +11,44 @@ from tkinter.filedialog import askopenfilenames
 from matplotlib import pyplot as plt
 
 
+#np.set_printoptions(threshold=np.inf)
+
 #Author(s): Kyle Sargent
 
-def findCircle(x):
+def findCircleArea(x):
     img = cv.imread(x,0)
     img = cv.medianBlur(img,5)
     cimg = cv.cvtColor(img,cv.COLOR_GRAY2BGR)
 
+    """The following lines can be used to have an algorithm detect circles for us.
+       or can use the hard-coded version that is commented out below"""
     #params are as follows: (image, method = cv2.HOUGH_GRADIENT is the only one that works thus far, dp, minDist, parap1 = gradient value,
     #param2 = accumulator threshold value for method input, minRadius, maxRadius)
-    circles = cv.HoughCircles(img,cv.HOUGH_GRADIENT,1,150,
-                            param1=50,param2=30,minRadius=0,maxRadius=0)
-
+    circles = cv.HoughCircles(img,cv.HOUGH_GRADIENT,1,190,
+                                        param1=50,param2=30,minRadius=0,maxRadius=0)
+    
     circles = np.uint8(np.around(circles))
-    for i in circles[0,:]:
-        # draw the detected outer circle
-        #params are as follows: (image, center coords,bgr values, thickness)
-        cv.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2)
-        print(cv.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2))
-        
+
+    for circ in circles[0,:]:
+        #draw the detected outer circle
+        #params are as follows: (image, center coords, radius, bgr values, thickness)
+        cv.circle(cimg,(circ[0],circ[1]),circ[2],(0,255,0),2) #this is the only circle drawn
+        rad = circ[2] #grab the radius
+
+    """The following lines can be used to hard-code in the circle
+    or can use above to use an algorithm to detect the circle"""
+    
+    #center = (int(w / 2), int(h / 2))
+    #rad = 195
+    #cv.circle(cimg, center, rad, (0,255,0), 2)
+    
+    area = math.pi * rad ** 2 #calculate the area of the circle detected in pixels
+    #print("Area of circle drawn is: " + str(int(area))+"px")
     cv.imshow('detected circles',cimg)
     cv.waitKey(0)
     cv.destroyAllWindows() 
-    return NotImplemented
-
+    return area
+     
 def cannyEdgeDetection(x):
     print("Edge Detection starting")
     
@@ -69,6 +84,7 @@ def cannyEdgeDetection(x):
     
               
 def main():
+    rad = 0 
     tk().withdraw() #we dont want root window to pop up so we get hide it.
     
     #datePath = input("Enter a date in the form of x-xx-xx xdpi:\n") #retrieve user input
@@ -89,7 +105,8 @@ def main():
     for path in imgPaths:  #for every image we clicked on in file explorer, run edgeDetection on it. #refactor if-else into own function later? maybe.
         if os.path.exists(path): #validate the path
             print("Valid path entered, staging for analyzing..")
-            findCircle(path)
+            area = findCircleArea(path)
+            print("Area of leafDisk is: " + str(int(area))+"px")
             cannyEdgeDetection(path)
         else: #let user know the software has detected an invalid path
             print("Invalid path detected, No file or directory resides in: \n" + path)
