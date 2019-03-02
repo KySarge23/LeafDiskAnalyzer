@@ -14,6 +14,7 @@ from matplotlib import pyplot as plt
 #np.set_printoptions(threshold=np.inf)
 
 #Author(s): Kyle Sargent, Erica Gitlin
+#Verison: 1.6.1
 
 def findCircleArea(x):
 
@@ -57,8 +58,8 @@ def findCircleArea(x):
     #for circ in circles[0,:]:
         #draw the detected outer circle
         #params are as follows: (image, center coords, radius, bgr values, thickness)
-     #   cv.circle(cimg,(circ[0],circ[1]),circ[2],(0,255,0),2) #this is the only circle drawn
-      #  rad = circ[2] #grab the radius
+        #cv.circle(cimg,(circ[0],circ[1]),circ[2],(0,255,0),2) #this is the only circle drawn
+        #rad = circ[2] #grab the radius
       
 
     """The following lines can be used to hard-code in the circle
@@ -67,8 +68,8 @@ def findCircleArea(x):
     h,w = img.shape[:2]
     
     center = (int(w / 2), int(h / 2))
-    rad = 195
-    cv.circle(cimg, center, rad, (0,255,0), 2)
+    rad = 200
+    cv.circle(cimg, center, rad, (0,0,255), 2)
     
     area = math.pi * rad ** 2 #calculate the area of the circle detected in pixels
     print("Area of circle drawn is: " + str(int(area))+"px")
