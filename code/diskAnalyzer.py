@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 
 #np.set_printoptions(threshold=np.inf)
 
-#Author(s): Kyle Sargent
+#Author(s): Kyle Sargent, Erica Gitlin
 
 def findCircleArea(x):
 
@@ -21,41 +21,61 @@ def findCircleArea(x):
        within the photo. Then will use that circle to find the area within it which
        is what will be used later in the edge detection"""
     
-    img = cv.imread(x,0)
-    img = cv.medianBlur(img,5)
-    cimg = cv.cvtColor(img,cv.COLOR_GRAY2BGR)
+    img = cv.imread(x,0) #read in as Grayscale
+    img = cv.medianBlur(img,5) #add blur to reduce noise on photo.
+    cimg = cv.cvtColor(img,cv.COLOR_GRAY2BGR) #convert back to BGR scale for the drawn circle to show up as whatever color specified.
 
     """The following lines can be used to have an algorithm detect circles for us.
        or can use the hard-coded version that is commented out below"""
 
-    #params are as follows: (image, method = cv2.HOUGH_GRADIENT is the only one that works thus far, dp, minDist, parap1 = gradient value,
+    #params are as follows: (image, method = cv2.HOUGH_GRADIENT is the only one that works
+    #thus far, dp, minDist, parap1 = gradient value,
     #param2 = accumulator threshold value for method input, minRadius, maxRadius)
     #for more details on HoughCircles, visit: http://www.bmva.org/bmvc/1989/avc-89-029.pdf or https://www.pyimagesearch.com/2014/07/21/detecting-circles-images-using-opencv-hough-circles/ 
 
-    circles = cv.HoughCircles(img,cv.HOUGH_GRADIENT,1,150,
-                                        param1=50,param2=30,minRadius=0,maxRadius=0)
-    
-    circles = np.uint8(np.around(circles))
+    """This is how the Hough Transformation works for circles:
 
-    for circ in circles[0,:]:
+        1. First, we create the accumulator(a two dimensional array) space, which is made up of a cell for each pixel.
+           Initially each cell is set to 0.
+        2. For each edge point (i, j) in the image, increment all cells which according to the equation of a circle (i-a)^{2}+(j-b)^{2}=r^{2}
+           could be the center of a circle.
+           These cells are represented by the letter a in the equation.
+        3. For each possible value of  a found in the previous step, find all possible values of b which satisfy the equation.
+        4. Search for local maxima in the accumulator space. These cells represent circles that were detected by the algorithm.
+        
+        If we do not know the radius of the circle we are trying to locate beforehand,
+        we can use a three-dimensional accumulator space to search for circles with an arbitrary radius.
+        Naturally, this is more computationally expensive.
+        This method can also detect circles that are partially outside of the accumulator space, as long as enough of the circle's area is still present within it. """
+
+     
+    #circles = cv.HoughCircles(img,cv.HOUGH_GRADIENT,1,200,
+                                        #param1=50,param2=30,minRadius=0,maxRadius=0)
+    
+    #circles = np.uint8(np.around(circles))
+
+    #for circ in circles[0,:]:
         #draw the detected outer circle
         #params are as follows: (image, center coords, radius, bgr values, thickness)
-        cv.circle(cimg,(circ[0],circ[1]),circ[2],(0,255,0),2) #this is the only circle drawn
-        rad = circ[2] #grab the radius
+     #   cv.circle(cimg,(circ[0],circ[1]),circ[2],(0,255,0),2) #this is the only circle drawn
+      #  rad = circ[2] #grab the radius
+      
 
     """The following lines can be used to hard-code in the circle
        or can use above to use an algorithm to detect the circle"""
+
+    h,w = img.shape[:2]
     
-    #center = (int(w / 2), int(h / 2))
-    #rad = 195
-    #cv.circle(cimg, center, rad, (0,255,0), 2)
+    center = (int(w / 2), int(h / 2))
+    rad = 195
+    cv.circle(cimg, center, rad, (0,255,0), 2)
     
     area = math.pi * rad ** 2 #calculate the area of the circle detected in pixels
-    #print("Area of circle drawn is: " + str(int(area))+"px")
+    print("Area of circle drawn is: " + str(int(area))+"px")
     cv.imshow('detected circles',cimg)
     cv.waitKey(0)
     cv.destroyAllWindows() 
-    return area
+    return
      
 def cannyEdgeDetection(x):
     """Edge detection function. Utilizes canny edge detection to detect edges found in the picture
@@ -94,10 +114,9 @@ def cannyEdgeDetection(x):
     cv.waitKey(0) #wait "forerver" for more details go to: https://docs.opencv.org/2.4/modules/highgui/doc/user_interface.html?highlight=waitkey#waitkey
     cv.destroyAllWindows() #destroy all windows on press of any character
     print("Closing Window")
-    
+    return 
               
 def main():
-    rad = 0 
     tk().withdraw() #we dont want root window to pop up so we get hide it.
     
     #datePath = input("Enter a date in the form of x-xx-xx xdpi:\n") #retrieve user input
@@ -118,13 +137,13 @@ def main():
     for path in imgPaths:  #for every image we clicked on in file explorer, run edgeDetection on it. #refactor if-else into own function later? maybe.
         if os.path.exists(path): #validate the path
             print("Valid path entered, staging for analyzing..")
-            area = findCircleArea(path)
-            print("Area of leafDisk is: " + str(int(area))+"px")
+            findCircleArea(path)
             cannyEdgeDetection(path)
         else: #let user know the software has detected an invalid path
             print("Invalid path detected, No file or directory resides in: \n" + path)
 
     #if the path input is not valid, then let user know without entering the loop.         
     #else: print("Invalid path detected, No directory found of: " + os.path.abspath(trayPath)
+
 
 main()
