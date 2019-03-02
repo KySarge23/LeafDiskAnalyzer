@@ -107,7 +107,7 @@ def cannyEdgeDetection(x):
 
     #Save image into photos folder for now. so can be used in analyzeDisks method
 
-    mpimg.imsave("../photos/edges.png", edges)
+    #mpimg.imsave("../photos/edges.png", edges)
 
     print("Edge Detection Complete")
     
