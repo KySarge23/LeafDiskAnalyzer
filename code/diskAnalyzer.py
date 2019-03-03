@@ -96,7 +96,7 @@ def cannyEdgeDetection(x):
     #imgC = cv.imread(x,1)
     imgG = cv.imread(x,0)
     
-    #cv.imshow('Original', img)
+        #cv.imshow('Original', img)
 
     #Converting img to RGB:
     #imgC = cv.cvtColor(imgC, cv.COLOR_BGR2RGB)
@@ -125,7 +125,7 @@ def threadHandler(date, tray, picNum):
         raise Exception("Too many Threads Started")
     
     dirName = "../photos/" + date + "/tray " + str(tray) + "/"
-    fName = str(picNum) + "-160x271_" + str(picNum) 
+    fName = str(picNum) + "-160x271_" + str(picNum) #pictures are of structure *number-160x271_number*
     #fileExt = imghdr.what(fName, h=None)
     
     path = dirName + fName
@@ -156,8 +156,6 @@ def threadHandler(date, tray, picNum):
 
 def main():
     tk().withdraw() #we dont want root window to pop up so we get hide it.
-
-    maxThreads = 8
     
     #datePath = input("Enter a date in the form of x-xx-xx xdpi:\n") #retrieve user input
     #datePath = "../photos/" + datePath #based off hierarchy of files, is subject to change
