@@ -96,7 +96,7 @@ def cannyEdgeDetection(x):
     #imgC = cv.imread(x,1)
     imgG = cv.imread(x,0)
     
-        #cv.imshow('Original', img)
+    #cv.imshow('Original', img)
 
     #Converting img to RGB:
     #imgC = cv.cvtColor(imgC, cv.COLOR_BGR2RGB)
@@ -120,12 +120,12 @@ def cannyEdgeDetection(x):
               
 def threadHandler(date, tray, picNum):
     print(thr.current_thread())
-    
-    if thr.activeCount() > 10: #has to be 10 because you have main thread and sockT thread included, so 8 total can be made from program adding to 10.
-        raise Exception("Too many Threads Started")
+    '''print(thr.enumerate()) 
+    if thr.activeCount() > 9: #has to be 10 because you have main thread and sockT thread included, so 8 total can be made from program adding to 10.
+        raise Exception("Too many Threads Started")'''
     
     dirName = "../photos/" + date + "/tray " + str(tray) + "/"
-    fName = str(picNum) + "-160x271_" + str(picNum) #pictures are of structure *number-160x271_number*
+    fName = str(picNum) + "-160x271_" + str(picNum) 
     #fileExt = imghdr.what(fName, h=None)
     
     path = dirName + fName
@@ -156,6 +156,8 @@ def threadHandler(date, tray, picNum):
 
 def main():
     tk().withdraw() #we dont want root window to pop up so we get hide it.
+
+    maxThreads = 8
     
     #datePath = input("Enter a date in the form of x-xx-xx xdpi:\n") #retrieve user input
     #datePath = "../photos/" + datePath #based off hierarchy of files, is subject to change
@@ -174,9 +176,10 @@ def main():
     #imgPaths = askopenfilenames(initialdir = '../photos/') #converts the input retrieved from user into an absolute path, and opens a explorer in that file
     threads = [] #creates a list of all threads to be used
     date = input("Enter a date in the form of x-xx-xx xdpi:\n") #retrieve user input
-    trays = [1] #placeholder until user input is working properly
-    picNums = [1,2,1,2,1,2,1,2,1] #placeholder until user input is working properly
-
+    trays = [1,3] #placeholder until user input is working properly
+    picNums = [1,2,3] #placeholder until user input is working properly
+    if len(trays)*len(picNums) > 8:
+        raise Exception("Too many Threads Started")
     for i in range(len(trays)): #for every tray
         for j in range(len(picNums)): #fro every picture
             #start a new thread for every picture and tray, add it to the list, and start it
