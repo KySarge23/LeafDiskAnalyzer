@@ -116,7 +116,7 @@ def cannyEdgeDetection(x):
 
     print("Edge Detection Complete")
     
-    cv.imshow('Edge detection', edges) #show the edge detection photo in its own window
+    cv.imshow(x, edges) #show the edge detection photo in its own window
     cv.waitKey(0) #wait "forerver" for more details go to: https://docs.opencv.org/2.4/modules/highgui/doc/user_interface.html?highlight=waitkey#waitkey
     cv.destroyAllWindows() #destroy all windows on press of any character
     print("Closing Window")
@@ -145,6 +145,10 @@ def threadHandler(date, tray, picNum):
             print("Valid path found, staging for analyzing..")
             findCircleArea(path)
             cannyEdgeDetection(path)
+    elif os.path.exists(path + ".tif"): #validate the path
+            path = path + ".tif"
+            findCircleArea(path)
+            cannyEdgeDetection(path)
     else: #let user know the software has detected an invalid path
             print("Invalid path detected, No file or directory resides in: \n" + path)
 
@@ -169,7 +173,7 @@ def main():
     #imgPaths = askopenfilenames(initialdir = '../photos/') #converts the input retrieved from user into an absolute path, and opens a explorer in that file
     threads = [] #creates a list of all threads to be used
     date = input("Enter a date in the form of x-xx-xx xdpi:\n") #retrieve user input
-    trays = [1] #placeholder until user input is working properly
+    trays = [1,2] #placeholder until user input is working properly
     picNums = [1] #placeholder until user input is working properly
     for i in range(len(trays)): #for every tray
         for j in range(len(picNums)): #fro every picture
