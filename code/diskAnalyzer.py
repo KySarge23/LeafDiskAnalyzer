@@ -6,15 +6,20 @@ import numpy as np
 import matplotlib.image as mpimg
 import tkinter
 import os
+import threading as thr
+import time
+import imghdr
+import sys
+from pathlib import Path as pth
 from tkinter import Tk as tk
 from tkinter.filedialog import askopenfilenames
 from matplotlib import pyplot as plt
 
 
+
 #np.set_printoptions(threshold=np.inf)
 
-#Author(s): Kyle Sargent, Erica Gitlin
-#Verison: 1.6.1
+#Author(s): Kyle Sargent, Erica Gitlin, Connor Jansen
 
 def findCircleArea(x):
 
@@ -58,8 +63,8 @@ def findCircleArea(x):
     #for circ in circles[0,:]:
         #draw the detected outer circle
         #params are as follows: (image, center coords, radius, bgr values, thickness)
-        #cv.circle(cimg,(circ[0],circ[1]),circ[2],(0,255,0),2) #this is the only circle drawn
-        #rad = circ[2] #grab the radius
+     #   cv.circle(cimg,(circ[0],circ[1]),circ[2],(0,255,0),2) #this is the only circle drawn
+      #  rad = circ[2] #grab the radius
       
 
     """The following lines can be used to hard-code in the circle
@@ -117,6 +122,33 @@ def cannyEdgeDetection(x):
     print("Closing Window")
     return 
               
+def threadHandler(date, tray, picNum):
+    print(thr.current_thread())
+    dirName = "../photos/" + date + "/tray " + str(tray) + "/"
+    fName = "1-160x271_" + str(picNum) 
+    #fileExt = imghdr.what(fName, h=None)
+    
+    path = dirName + fName
+    path = os.path.abspath(path)
+    if os.path.exists(path + ".png"): #validate the path
+            print("Valid path found, staging for analyzing..")
+            path = path + ".png"
+            findCircleArea(path)
+            cannyEdgeDetection(path)
+    elif os.path.exists(path + ".jpeg"): #validate the path
+            path = path + ".jpeg"
+            print("Valid path found, staging for analyzing..")
+            findCircleArea(path)
+            cannyEdgeDetection(path)
+    elif os.path.exists(path + ".tiff"): #validate the path
+            path = path + ".tiff"
+            print("Valid path found, staging for analyzing..")
+            findCircleArea(path)
+            cannyEdgeDetection(path)
+    else: #let user know the software has detected an invalid path
+            print("Invalid path detected, No file or directory resides in: \n" + path)
+
+
 def main():
     tk().withdraw() #we dont want root window to pop up so we get hide it.
     
@@ -134,14 +166,26 @@ def main():
     #if os.path.exists(trayPath):
         #askopenfilenames() does the following: allow user to grab all images they wish to upload Then this returns a tuple of strings
         
-    imgPaths = askopenfilenames(initialdir = '../photos/') #converts the input retrieved from user into an absolute path, and opens a explorer in that file
-    for path in imgPaths:  #for every image we clicked on in file explorer, run edgeDetection on it. #refactor if-else into own function later? maybe.
+    #imgPaths = askopenfilenames(initialdir = '../photos/') #converts the input retrieved from user into an absolute path, and opens a explorer in that file
+    threads = [] #creates a list of all threads to be used
+    date = input("Enter a date in the form of x-xx-xx xdpi:\n") #retrieve user input
+    trays = [1] #placeholder until user input is working properly
+    picNums = [1] #placeholder until user input is working properly
+    for i in range(len(trays)): #for every tray
+        for j in range(len(picNums)): #fro every picture
+
+            #start a new thread for every picture and tray, add it to the list, and start it
+            t = thr.Thread(target = threadHandler, args = [date, trays[i], picNums[j]]) 
+            threads.append(t)
+            t.start()
+            
+    '''for path in imgPaths:  #for every image we clicked on in file explorer, run edgeDetection on it. #refactor if-else into own function later? maybe.
         if os.path.exists(path): #validate the path
             print("Valid path entered, staging for analyzing..")
             findCircleArea(path)
             cannyEdgeDetection(path)
         else: #let user know the software has detected an invalid path
-            print("Invalid path detected, No file or directory resides in: \n" + path)
+            print("Invalid path detected, No file or directory resides in: \n" + path)'''
 
     #if the path input is not valid, then let user know without entering the loop.         
     #else: print("Invalid path detected, No directory found of: " + os.path.abspath(trayPath)
