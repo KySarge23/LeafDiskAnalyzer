@@ -74,8 +74,8 @@ def findCircleArea(x):
     cv.circle(cimg, center, rad, (0,0,255), 2)
     
     area = math.pi * rad ** 2 #calculate the area of the circle detected in pixels
-    print("Area of circle drawn is: " + str(int(area))+"px")
-    cv.imshow('detected circles',cimg)
+    print("Area of circle drawn is: " + str(int(area))+"px\n")
+    cv.imshow(x,cimg)
     cv.waitKey(0)
     cv.destroyAllWindows() 
     return
@@ -85,7 +85,6 @@ def cannyEdgeDetection(x):
        input will be cropped image from the findCircleArea() function.
        output should be an image with found mildew/edges"""
 
-    
     print("Edge Detection starting")
     
     #second param: (1= color, 0= grayscale, -1 = unchanged)
@@ -121,12 +120,17 @@ def cannyEdgeDetection(x):
               
 def threadHandler(date, tray, picNum):
     print(thr.current_thread())
+    
+    if thr.activeCount() > 10: #has to be 10 because you have main thread and sockT thread included, so 8 total can be made from program adding to 10.
+        raise Exception("Too many Threads Started")
+    
     dirName = "../photos/" + date + "/tray " + str(tray) + "/"
-    fName = "1-160x271_" + str(picNum) 
+    fName = str(picNum) + "-160x271_" + str(picNum) 
     #fileExt = imghdr.what(fName, h=None)
     
     path = dirName + fName
     path = os.path.abspath(path)
+    print(path + "\n")
     if os.path.exists(path + ".png"): #validate the path
             print("Valid path found, staging for analyzing..")
             path = path + ".png"
@@ -134,12 +138,12 @@ def threadHandler(date, tray, picNum):
             cannyEdgeDetection(path)
     elif os.path.exists(path + ".jpeg"): #validate the path
             path = path + ".jpeg"
-            print("Valid path found, staging for analyzing..")
+            print("Valid path found, staging for analyzing..\n")
             findCircleArea(path)
             cannyEdgeDetection(path)
     elif os.path.exists(path + ".tiff"): #validate the path
             path = path + ".tiff"
-            print("Valid path found, staging for analyzing..")
+            print("Valid path found, staging for analyzing..\n")
             findCircleArea(path)
             cannyEdgeDetection(path)
     elif os.path.exists(path + ".tif"): #validate the path
@@ -148,10 +152,12 @@ def threadHandler(date, tray, picNum):
             cannyEdgeDetection(path)
     else: #let user know the software has detected an invalid path
             print("Invalid path detected, No file or directory resides in: \n" + path)
-
+            
 
 def main():
     tk().withdraw() #we dont want root window to pop up so we get hide it.
+
+    maxThreads = 8
     
     #datePath = input("Enter a date in the form of x-xx-xx xdpi:\n") #retrieve user input
     #datePath = "../photos/" + datePath #based off hierarchy of files, is subject to change
@@ -170,24 +176,24 @@ def main():
     #imgPaths = askopenfilenames(initialdir = '../photos/') #converts the input retrieved from user into an absolute path, and opens a explorer in that file
     threads = [] #creates a list of all threads to be used
     date = input("Enter a date in the form of x-xx-xx xdpi:\n") #retrieve user input
-    trays = [1,2] #placeholder until user input is working properly
-    picNums = [1] #placeholder until user input is working properly
+    trays = [1] #placeholder until user input is working properly
+    picNums = [1,2,1,2,1,2,1,2,1] #placeholder until user input is working properly
+
     for i in range(len(trays)): #for every tray
         for j in range(len(picNums)): #fro every picture
-
             #start a new thread for every picture and tray, add it to the list, and start it
-            t = thr.Thread(target = threadHandler, args = [date, trays[i], picNums[j]]) 
+            t = thr.Thread(target = threadHandler, args = [date, trays[i], picNums[j]])
             threads.append(t)
             t.start()
-            
-    '''for path in imgPaths:  #for every image we clicked on in file explorer, run edgeDetection on it. #refactor if-else into own function later? maybe.
+        '''for path in imgPaths:  #for every image we clicked on in file explorer, run edgeDetection on it. #refactor if-else into own function later? maybe.
         if os.path.exists(path): #validate the path
             print("Valid path entered, staging for analyzing..")
             findCircleArea(path)
             cannyEdgeDetection(path)
         else: #let user know the software has detected an invalid path
             print("Invalid path detected, No file or directory resides in: \n" + path)'''
-
+    for t in threads:
+        t.join()
     #if the path input is not valid, then let user know without entering the loop.         
     #else: print("Invalid path detected, No directory found of: " + os.path.abspath(trayPath)
 
