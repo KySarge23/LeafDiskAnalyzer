@@ -16,9 +16,6 @@ from tkinter.filedialog import askopenfilenames
 from matplotlib import pyplot as plt
 
 
-
-#np.set_printoptions(threshold=np.inf)
-
 #Author(s): Kyle Sargent, Erica Gitlin, Connor Jansen
 
 def findCircleArea(x):
