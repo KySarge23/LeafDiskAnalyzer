@@ -17,7 +17,7 @@ from matplotlib import pyplot as plt
 
 
 #Author(s): Kyle Sargent, Erica Gitlin, Connor Jansen
-#Version: 1.7
+#Version: 1.8
 
 def findCircleArea(x):
 
