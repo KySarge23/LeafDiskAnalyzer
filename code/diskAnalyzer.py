@@ -120,11 +120,15 @@ def cannyEdgeDetection(x):
     return
 
 def threadHandler(date, tray, picNum):
+    '''
+    This Function accepts the three user inputs from the main function/GUI as arguments.
+    It then builds a valid filepath based on the arguments. Once a valid path is created,
+    this function sends that path to the findCircleArea and cannyEdgeDetection functions.
+    '''
     print(thr.current_thread())
 
     dirName = "../photos/" + date + "/tray " + str(tray) + "/"
     fName = str(picNum) + "-160x271_" + str(picNum)
-    #fileExt = imghdr.what(fName, h=None)
 
     path = dirName + fName
     path = os.path.abspath(path)
@@ -175,24 +179,18 @@ def main():
     trays = [1] #placeholder until user input is working properly
     picNums = [1,2,1,2,1,2,1,2] #placeholder until user input is working properly
 
-    if len(trays)*len(picNums) > 8:
-        raise Exception("Too many Threads Started")
-
-    for i in range(len(trays)): #for every tray
-        for j in range(len(picNums)): #fro every picture
-            #start a new thread for every picture and tray, add it to the list, and start it
+    if len(trays)*len(picNums) > 8: #this sets the max number of pictures that can be 
+        raise Exception("Too many Threads Started") #stops program from running if threads
+    
+    #start a new thread for every picture and tray, add it to the list, and start it
+    for i in range(len(trays)):
+        for j in range(len(picNums)): 
             t = thr.Thread(target = threadHandler, args = [date, trays[i], picNums[j]])
             threads.append(t)
             t.start()
-        '''for path in imgPaths:  #for every image we clicked on in file explorer, run edgeDetection on it. #refactor if-else into own function later? maybe.
-        if os.path.exists(path): #validate the path
-            print("Valid path entered, staging for analyzing..")
-            findCircleArea(path)
-            cannyEdgeDetection(path)
-        else: #let user know the software has detected an invalid path
-            print("Invalid path detected, No file or directory resides in: \n" + path)'''
     for t in threads:
         t.join()
+        
     #if the path input is not valid, then let user know without entering the loop.
     #else: print("Invalid path detected, No directory found of: " + os.path.abspath(trayPath)
 
