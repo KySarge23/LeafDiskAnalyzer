@@ -22,7 +22,7 @@ from matplotlib import pyplot as plt
 def findCircleArea(x):
 
     """Area finding function, Will utilize HoughCircle method to detect circles
-       within the photo. Then will use that circle to find the area within it which
+       within the photo or hard coded method to detect circles. Then will use that circle to find the area within it which
        is what will be used later in the edge detection"""
 
     img = cv.imread(x,0) #read in as Grayscale
@@ -95,6 +95,7 @@ def cannyEdgeDetection(x):
     #notice when matplot pops up, color is distorted.
     #Reading of the same photo, in color for displaying and grayscale for edgeDetection.
     #imgC = cv.imread(x,1)
+
     imgG = cv.imread(x,0)
 
     #cv.imshow('Original', img)
@@ -159,21 +160,7 @@ def threadHandler(date, tray, picNum):
 def main():
     tk().withdraw() #we dont want root window to pop up so we get hide it.
 
-    #datePath = input("Enter a date in the form of x-xx-xx xdpi:\n") #retrieve user input
-    #datePath = "../photos/" + datePath #based off hierarchy of files, is subject to change
-
-    #get tray number from user
-    #trayPath = input("Enter the tray number(s) you wish to use in the form of '1-3' or '1,3,5': ")
-    #amend the path to specific folder.
-    #trayPath = datePath + "/tray " + str(trayPath) #only works with single tray #s thus far.
-
-    #print(trayPath)
-
-    #error checking against the filepath gained from the two inputs.
-    #if os.path.exists(trayPath):
-        #askopenfilenames() does the following: allow user to grab all images they wish to upload Then this returns a tuple of strings
-
-    #imgPaths = askopenfilenames(initialdir = '../photos/') #converts the input retrieved from user into an absolute path, and opens a explorer in that file
+   
     threads = [] #creates a list of all threads to be used
     date = input("Enter a date in the form of x-xx-xx xdpi:\n") #retrieve user input
     trays = [1] #placeholder until user input is working properly
@@ -188,10 +175,8 @@ def main():
             t = thr.Thread(target = threadHandler, args = [date, trays[i], picNums[j]])
             threads.append(t)
             t.start()
+    
     for t in threads:
         t.join()
-        
-    #if the path input is not valid, then let user know without entering the loop.
-    #else: print("Invalid path detected, No directory found of: " + os.path.abspath(trayPath)
 
 main()
