@@ -1,10 +1,6 @@
 #!/usr/bin/python3
 from tkinter import *
 
-
-#LDA GUI
-
-
 class App(Frame):
     def __init__(self, master):
         Frame.__init__(self,master)
