@@ -167,7 +167,7 @@ def threadHandler(date, tray, picNum):
             print("Valid path found, staging for analyzing..")
             path = path + ".png"
             circArea = findCircleArea(path)
-            mildewArea = cannyEdgeDetection("crop.png")
+            mildewArea = cannyEdgeDetection(path)
             mildewRatio = mildewArea/circArea * 100
             print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
     elif os.path.exists(path + ".jpeg"): #validate the path
@@ -185,7 +185,7 @@ def threadHandler(date, tray, picNum):
     elif os.path.exists(path + ".tif"): #validate the path
             path = path + ".tif"
             circArea = findCircleArea(path)
-            mildewArea = cannyEdgeDetection("crop.png")
+            mildewArea = cannyEdgeDetection(path)
             mildewRatio = mildewArea/circArea * 100
             print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
     else: #let user know the software has detected an invalid path
