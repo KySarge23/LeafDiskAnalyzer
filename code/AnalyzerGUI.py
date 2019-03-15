@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 from tkinter import *
 
+#Author(s): Erica Gitlin,
+
 class App(Frame):
     def __init__(self, master):
         Frame.__init__(self,master)
