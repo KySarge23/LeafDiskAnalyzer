@@ -272,7 +272,7 @@ if __name__ == '__main__':
        else:
             print("An option must be selected")
 
-    def upload():
+    def sendToAnalyzer():
         """
         Function to send data from entry fields to diskAnalyzer. We grab the entry fields' values and strip any 
         whitespace from the front/back so that it doesnt mess up with our validation methods. 
@@ -322,7 +322,7 @@ if __name__ == '__main__':
 
     # calendarBtn = tk.Button(root, text="Pick a Date", command=date)
     # calendarBtn.grid(row = 6, column = 1)
-    uploadBtn = tk.Button(root, text= "Upload", command=upload, height = 1, width = 12 )
+    uploadBtn = tk.Button(root, text= "Analyze", command=sendToAnalyzer, height = 1, width = 12 )
     uploadBtn.grid(row= 5, column = 0)
 
     root.mainloop()
