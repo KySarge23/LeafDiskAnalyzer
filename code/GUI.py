@@ -1,9 +1,10 @@
+#!/usr/bin/python3
+
 import tkinter as tk
 from tkinter import *
 from tkinter import messagebox
 
 #import calendarPicker as cp 
-
 
 
 #Author(s): Erica Gitlin, Colton Eddy, Kyle Sargent
@@ -82,9 +83,14 @@ if __name__ == '__main__':
     root.geometry('300x300')
     root.title("LDA GUI v1.0")
     gui = analyzerGUI(root) #create new instance of the analyzerGUI with root as master.
+    
+    trayNums = []
+    picNums = []
+    
     trays = ""
     pics = ""
     date = ""
+
 
     # following lines uncomment if want to use calendarPicker.py 
     # def date():
@@ -103,8 +109,15 @@ if __name__ == '__main__':
 
         Input(s): x (String), y (String)
         Output(s): boolean value based on whether or not both strings are valid.
+        Local Varaible(s): countx (int), county (int)
 
         """
+        if x == "":
+            messagebox.showwarning("No Entry Warning!", "No entry found in the Tray Entry Field. Please enter data in the following format: '1-3' or '1,2,3'.")
+            return False
+        if y == "":
+            messagebox.showwarning("No Entry Warning!", "No entry found in the Picture Entry Field. Please enter data in the following format: '1-3' or '1,2,3'.")
+            return False
 
         countx, county = 0, 0
         for i in x:
@@ -132,12 +145,15 @@ if __name__ == '__main__':
         as d-m-yy as well. Otherwise we check for digits and the '-' character if anything else is found, 
         then we warn the user about the found character and then clear the entry field for retrying.
         
-        Input(s): date
+        Input(s): date (String)
         Output(s): boolen if count found == len of date 
+        Local Varaible(s): count (int)
 
         """
 
-        if len(date) < 6:
+        if len(date) < 6 or len(date) > 7:
+            messagebox.showwarning("Date Warning!", "Date entered has too many or too little characters. Please enter a date in the following format: 'mm-dd-yy'")
+            gui.dateEntry.delete(0,tk.END)
             return False
         else:
             count = 0
@@ -150,6 +166,67 @@ if __name__ == '__main__':
                     return False
             if count == len(date):
                 return True
+    
+    def findOccurrences(s, ch):
+        """
+        Function to find occurances of a character in a string. only useful for when ',' is used in an entry field.
+
+        Input(s): s (String), ch (Character)
+        Output(s): a list of indicies in which ch was found in s.
+        Local Variable(s): None
+
+        """    
+        return [i for i, letter in enumerate(s) if letter == ch]
+
+    def getNumbers(input):
+        """
+        Function to extract the numbers from the entry fields after they've been validated. This will grab the numbers found surrounding a '-'
+        or multiple ',' in an entry field. Then will place either the range of numbers or sequence of numbers in a list
+        and return that to the Analyzer.
+
+        Input(s): input (String)
+        Output(s): nums[] (list of ints)
+        Local Variables: idx (int), n1/n2 (int), nums[] (list of ints), comms [] (list of indicies where ',' is found)
+
+        """
+
+        nums, comms = [], []
+
+        n1,n2 = 0,0
+
+        if '-' in input:
+            idx = input.index('-')
+            n1 = int(input[idx-1])
+            n2 = int(input[idx+1])
+            if n1 > n2: 
+                messagebox.showwarning("Entry Warning!", "Left Hand Side of '-' is greater than Right Hand Side. Please fix the order and retry.")
+            else:
+                for i in range (n1, n2+1):
+                    nums.append(i)
+                return nums
+        
+        if ',' in input and len(input) > 3:
+            comms = findOccurrences(input, ',')
+            for idx in comms:
+                n1 = int(input[idx-1])
+                n2 = int(input[idx+1])
+                if n1 in nums:
+                    nums.append(n2)
+                elif n2 in nums:
+                    nums.append(n1)
+                else:
+                    nums.append(n1)
+                    nums.append(n2)
+            return nums
+
+        if len(input) == 1:
+            n1 = int(input)
+            nums.append(n1)
+            return nums
+      
+
+        
+        
             
 
     def upload():
@@ -161,6 +238,7 @@ if __name__ == '__main__':
         
         Input(s): None
         Output(s) None
+        Local Varaible(s): None
 
         """
 
@@ -176,12 +254,19 @@ if __name__ == '__main__':
             print(trays)
             print(pics)
             print(date)
+            trayNums = getNumbers(trays)
+            picNums = getNumbers(pics)
+            print("Tray Numbers are: " + str(trayNums))
+            print("Picture Numbers are: " + str(picNums))
+
+
 
             status = tk.Label(root, text="Sending inputs...", bd = 1)
             status.grid(row = 7, column = 1, pady=(70,0))
         return
                 
-    
+
+
     # calendarBtn = tk.Button(root, text="Pick a Date", command=date)
     # calendarBtn.grid(row = 6, column = 1)
     uploadBtn = tk.Button(root, text= "Upload", command=upload)
