@@ -84,13 +84,15 @@ if __name__ == '__main__':
     root.title("LDA GUI v1.0")
     gui = analyzerGUI(root) #create new instance of the analyzerGUI with root as master.
     
-    trayNums = []
-    picNums = []
+    trayNumArr = []
+    picNumArr = []
     
     trays = ""
     pics = ""
     date = ""
 
+    numTrays = 0
+    numPics = 0
 
     # following lines uncomment if want to use calendarPicker.py 
     # def date():
@@ -200,13 +202,13 @@ if __name__ == '__main__':
             n1 = int(input[idx-1])
             n2 = int(input[idx+1])
             if n1 > n2: 
-                messagebox.showwarning("Entry Warning!", "Left Hand Side of '-' is greater than Right Hand Side. Please fix the order and retry.")
+                return messagebox.showwarning("Entry Warning!", "Left Hand Side of '-' is greater than Right Hand Side. Please fix the order and retry.")
             else:
                 for i in range (n1, n2+1):
                     nums.append(i)
                 return nums
         
-        if ',' in input and len(input) > 3:
+        if ',' in input and len(input) >= 3:
             comms = findOccurrences(input, ',')
             for idx in comms:
                 n1 = int(input[idx-1])
@@ -246,6 +248,16 @@ if __name__ == '__main__':
         trays = gui.trayEntry.get() .rstrip().lstrip()
         pics = gui.picEntry.get().rstrip().lstrip()
         date = gui.dateEntry.get().rstrip().lstrip()
+        
+        trayNumArr = getNumbers(trays)
+        picNumArr = getNumbers(pics)
+        numTrays = len(trayNumArr)
+        numPics = len(picNumArr)
+        
+        if numPics * numTrays > 8:
+            return messagebox.showwarning("Input Warning!", "Current inputs from Tray/Picture entry fields will spawn too many threads. Use the following as a guide for entering data into tray/pictures entry fields: trays * pictures <= 8.")
+            
+
         if validateTP(trays, pics) and validateDate(date):
             gui.trayEntry.config(state='disabled')      
             gui.picEntry.config(state='disabled')  
@@ -255,14 +267,13 @@ if __name__ == '__main__':
             print(trays)
             print(pics)
             print(date)
-            trayNums = getNumbers(trays)
-            picNums = getNumbers(pics)
-            print("Tray Numbers are: " + str(trayNums))
-            print("Picture Numbers are: " + str(picNums))
+            print("Tray Numbers are: " + str(trayNumArr))
+            print("Picture Numbers are: " + str(picNumArr))
 
 
 
-            status = tk.Label(root, text="Sending inputs...", bd = 1)
+
+            status = tk.Label(root, text="Sending inputs...", bd = 5)
             status.grid(row = 7, column = 1, pady=(70,0))
         return
                 
