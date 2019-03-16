@@ -11,9 +11,14 @@ from tkinter import messagebox
 
 class analyzerGUI:
     def __init__(self, master):
-        """ initialization of all entry fields, labels, buttons, etc that are necessary for the GUI. 
+        """ 
+        Initialization of all entry fields, labels, buttons, etc that are necessary for the GUI. 
         we use self.___(name) for all because then we can access their values outside of the class and thus allow for 
         manipulation/capturing/checking
+
+        Input(s): self, master
+        Output(s): None
+
         """
 
         #a blank canvas for our GUI
@@ -32,6 +37,12 @@ class analyzerGUI:
         self.helpmenu.add_command(label='About')
 
         def clearTrayEntry(event):
+            """
+            Function to clear entry field. Upon the event passed in, we execute this function.
+            Input(s): event
+            Output(s): None
+            
+            """
             self.trayEntry.delete(0,tk.END)
         
         def clearPicEntry(event):
@@ -80,6 +91,18 @@ if __name__ == '__main__':
     #     cp.DatePicker(format_str='%s-%02d-%s')
 
     def validateTP(x,y):
+        """
+        
+        Function to validate the Tray/Picture entries. We initialize countx and county for counting correct or valid characters found from the inputs.
+        Then we loop over each string and check if the character is valid (e.g. digit, '-' or ','). If so we increment count, if not we show a warning
+        with the invalid character and clear the entry field in which the invalid character was found. After character validation, we check if countx and county
+        are equal to the length of the strings passed in, meaning that each character was valid.
+
+        Input(s): x (String), y (String)
+        Output(s): boolean value based on wether or not both strings are valid.
+
+        """
+
         countx, county = 0, 0
         for i in x:
             if i.isdigit() or i == '-' or i == ',':
@@ -101,6 +124,16 @@ if __name__ == '__main__':
             return True
         
     def validateDate(date):
+        """
+        Function to validate the date input by the user. We check if date is less than 6 because it allows for folders to be structured as d-m-yy as well.
+        otherwise we check for digits and the '-' character if anything else is found then we warn 
+        the user about the found character and then clear the entry field for retrying.
+        
+        Input(s): date
+        Output(s): boolen if count found == len of date 
+
+        """"
+
         if len(date) < 6:
             return False
         else:
@@ -117,9 +150,18 @@ if __name__ == '__main__':
             
 
     def upload():
-        trays = gui.trayEntry.get() .rstrip()
-        pics = gui.picEntry.get().rstrip()
-        date = gui.dateEntry.get().rstrip()
+        """
+        Function to send data from entry fields to diskAnalyzer. We grab the entry fields' values and strip any whitespace from the front/back
+        so that it doesnt mess up with our validation methods. Then we validate the entry fields and upon them returning true, we disable all buttons
+        and add a status label to let the user know we're sending the inputs. 
+        Input(s): None
+        Output(s) None
+
+        """
+
+        trays = gui.trayEntry.get() .rstrip().lstrip()
+        pics = gui.picEntry.get().rstrip().lstrip()
+        date = gui.dateEntry.get().rstrip().lstrip()
         if validateTP(trays, pics) and validateDate(date):
             gui.trayEntry.config(state='disabled')      
             gui.picEntry.config(state='disabled')  
