@@ -157,7 +157,7 @@ if __name__ == '__main__':
         Function to send data from entry fields to diskAnalyzer. We grab the entry fields' values and strip any 
         whitespace from the front/back so that it doesnt mess up with our validation methods. 
         Then we validate the entry fields and upon them returning true, 
-        we disable all buttonsand add a status label to let the user know we're sending the inputs. 
+        we disable all buttons and add a status label to let the user know we're sending the inputs. 
         
         Input(s): None
         Output(s) None
