@@ -135,7 +135,7 @@ if __name__ == '__main__':
         Input(s): date
         Output(s): boolen if count found == len of date 
 
-        """"
+        """
 
         if len(date) < 6:
             return False
