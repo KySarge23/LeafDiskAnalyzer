@@ -271,6 +271,7 @@ if __name__ == '__main__':
             return True
        else:
             print("An option must be selected")
+            return False
 
     def sendToAnalyzer():
         """
