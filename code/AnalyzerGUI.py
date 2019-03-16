@@ -84,8 +84,4 @@ c = Canvas(root, height=600, width=600)
 
 
 
-<<<<<<< HEAD
 root.mainloop()
-=======
-root.mainloop()
->>>>>>> 25a2d01a72ca68b7148c41fb87601394533a4816
