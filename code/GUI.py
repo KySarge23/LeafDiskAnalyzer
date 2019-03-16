@@ -93,9 +93,12 @@ if __name__ == '__main__':
     def validateTP(x,y):
         """
         
-        Function to validate the Tray/Picture entries. We initialize countx and county for counting correct or valid characters found from the inputs.
-        Then we loop over each string and check if the character is valid (e.g. digit, '-' or ','). If so we increment count, if not we show a warning
-        with the invalid character and clear the entry field in which the invalid character was found. After character validation, we check if countx and county
+        Function to validate the Tray/Picture entries. We initialize countx and county for counting correct or 
+        valid characters found from the inputs.
+        Then we loop over each string and check if the character is valid (e.g. digit, '-' or ','). 
+        If so we increment count, if not we show a warning with the invalid character 
+        and clear the entry field in which the invalid character was found. 
+        After character validation, we check if countx and county 
         are equal to the length of the strings passed in, meaning that each character was valid.
 
         Input(s): x (String), y (String)
@@ -125,9 +128,9 @@ if __name__ == '__main__':
         
     def validateDate(date):
         """
-        Function to validate the date input by the user. We check if date is less than 6 because it allows for folders to be structured as d-m-yy as well.
-        otherwise we check for digits and the '-' character if anything else is found then we warn 
-        the user about the found character and then clear the entry field for retrying.
+        Function to validate the date input by the user. We check if date is less than 6 because it allows for folders to be structured 
+        as d-m-yy as well. Otherwise we check for digits and the '-' character if anything else is found, 
+        then we warn the user about the found character and then clear the entry field for retrying.
         
         Input(s): date
         Output(s): boolen if count found == len of date 
@@ -152,8 +155,9 @@ if __name__ == '__main__':
     def upload():
         """
         Function to send data from entry fields to diskAnalyzer. We grab the entry fields' values and strip any whitespace from the front/back
-        so that it doesnt mess up with our validation methods. Then we validate the entry fields and upon them returning true, we disable all buttons
-        and add a status label to let the user know we're sending the inputs. 
+        so that it doesnt mess up with our validation methods. Then we validate the entry fields and upon them returning true, 
+        we disable all buttonsand add a status label to let the user know we're sending the inputs. 
+        
         Input(s): None
         Output(s) None
 
