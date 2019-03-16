@@ -99,7 +99,7 @@ if __name__ == '__main__':
         are equal to the length of the strings passed in, meaning that each character was valid.
 
         Input(s): x (String), y (String)
-        Output(s): boolean value based on wether or not both strings are valid.
+        Output(s): boolean value based on whether or not both strings are valid.
 
         """
 
