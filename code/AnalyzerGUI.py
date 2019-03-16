@@ -2,7 +2,7 @@
 from tkinter import *
 from tkinter import messagebox
 
-#Author(s): Erica Gitlin, Colton Eddy, Kyle Sargent
+#Author(s): Erica Gitlin, Colton Eddy
 
 class App(Frame):
     def __init__(self, master):
@@ -84,4 +84,8 @@ c = Canvas(root, height=600, width=600)
 
 
 
+<<<<<<< HEAD
 root.mainloop()
+=======
+root.mainloop()
+>>>>>>> 25a2d01a72ca68b7148c41fb87601394533a4816
