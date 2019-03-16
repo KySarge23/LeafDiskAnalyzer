@@ -38,6 +38,8 @@ class analyzerGUI:
         self.menu.add_cascade(label='Help', menu=self.helpmenu) 
         self.helpmenu.add_command(label='About')
 
+
+
         def clearTrayEntry(event):
             """
             Function to clear entry field. Upon the event passed in, we execute this function.
@@ -75,6 +77,7 @@ class analyzerGUI:
         self.dateEntry.grid(row = 4, column = 1, pady=(0,60))
         self.dateEntry.bind("<FocusIn>", clearDateEntry)
 
+        self.status = Label(root, text="Sending inputs...")
 
         self.progress = ttk.Progressbar(root, orient ="horizontal", length = 200, mode= "indeterminate")
         self.bytes = 0
@@ -93,6 +96,8 @@ class analyzerGUI:
             if self.bytes < self.maxbytes:
                 # read more bytes after 100 ms
                 self.after(100, self.read_bytes)
+    
+
 
 if __name__ == '__main__':
     #initializing the root window
@@ -245,10 +250,6 @@ if __name__ == '__main__':
             nums.append(n1)
             return nums
       
-   
-        
-            
-
     def upload():
         """
         Function to send data from entry fields to diskAnalyzer. We grab the entry fields' values and strip any 
@@ -286,17 +287,17 @@ if __name__ == '__main__':
             print(date)
             print("Tray Numbers are: " + str(trayNumArr))
             print("Picture Numbers are: " + str(picNumArr))
-            status = tk.Label(root, text="Sending inputs...", bd = 5)
-            status.grid(row = 7, column = 1, pady=(70,0))
+            gui.status.grid(row = 7, column = 1, pady=(70,0))
             gui.progress.grid(row=8, column = 1)
             gui.progress.start()
+            
         return
                 
 
 
     # calendarBtn = tk.Button(root, text="Pick a Date", command=date)
     # calendarBtn.grid(row = 6, column = 1)
-    uploadBtn = tk.Button(root, text= "Upload", command=upload)
+    uploadBtn = tk.Button(root, text= "Upload", command=upload, height = 1, width = 12 )
     uploadBtn.grid(row= 6, column = 0)
 
     root.mainloop()
