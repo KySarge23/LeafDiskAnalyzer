@@ -180,8 +180,9 @@ if __name__ == '__main__':
 
     def getNumbers(input):
         """
-        Function to extract the numbers from the entry fields after they've been validated. This will grab the numbers found surrounding a '-'
-        or multiple ',' in an entry field. Then will place either the range of numbers or sequence of numbers in a list
+        Function to extract the numbers from the entry fields after they've been validated. 
+        This will grab the numbers found surrounding a '-' or multiple ',' in an entry field. 
+        Then will place either the range of numbers or sequence of numbers in a list
         and return that to the Analyzer.
 
         Input(s): input (String)
