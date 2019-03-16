@@ -38,8 +38,12 @@ class analyzerGUI:
         self.menu.add_cascade(label='Help', menu=self.helpmenu) 
         self.helpmenu.add_command(label='About')
 
-
-
+        self.option = StringVar()
+        self.r1 = Radiobutton(master, text = "New Spreadsheet", value ="True" , var=self.option)
+        self.r1.grid(row = 0, column = 0, padx = (0, 10))
+        self.r2 = Radiobutton(master, text="Existing Spreadsheet", value="False", var=self.option)
+        self.r2.grid(row = 0, column = 1)
+        
         def clearTrayEntry(event):
             """
             Function to clear entry field. Upon the event passed in, we execute this function.
@@ -57,24 +61,24 @@ class analyzerGUI:
 
 
         self.trayLabel = Label(master, text= "Tray Number(s):" )
-        self.trayLabel.grid(row = 0, column = 0, pady = (0,10))
+        self.trayLabel.grid(row = 1, column = 0, pady = (0,10))
         self.trayEntry = Entry(master)
         self.trayEntry.insert(0,"Placeholder: '1-3'")   
-        self.trayEntry.grid(row = 0, column = 1, pady = (0,10))
+        self.trayEntry.grid(row = 1, column = 1, pady = (0,10))
         self.trayEntry.bind("<FocusIn >", clearTrayEntry)
 
         self.picLabel = Label(master, text = "Picture Number(s):")
-        self.picLabel.grid(row = 1, column = 0, pady = (0,10))
+        self.picLabel.grid(row = 2, column = 0, pady = (0,10))
         self.picEntry = Entry(master)
-        self.picEntry.grid(row = 1, column = 1, pady = (0,10))
+        self.picEntry.grid(row = 2, column = 1, pady = (0,10))
         self.picEntry.insert(0,"Placeholder: '1-3'")
         self.picEntry.bind("<FocusIn>", clearPicEntry)
 
         self.dateLabel= Label(master, text="Date")
-        self.dateLabel.grid(row = 4, column= 0, pady=(0,60))
+        self.dateLabel.grid(row = 3, column= 0, pady=(0,60))
         self.dateEntry = Entry(master)
         self.dateEntry.insert(0,"Date: 'mm-dd-yy'")
-        self.dateEntry.grid(row = 4, column = 1, pady=(0,60))
+        self.dateEntry.grid(row = 3, column = 1, pady=(0,60))
         self.dateEntry.bind("<FocusIn>", clearDateEntry)
 
         self.status = Label(root, text="Sending inputs...")
@@ -175,8 +179,11 @@ if __name__ == '__main__':
         Local Varaible(s): count (int)
 
         """
+        if date == "":
+            messagebox.showwarning("No Entry Warning!", "No entry found in Date entry. Please enter a date in the following format: 'mm-dd-yy'.")
+            return False
 
-        if len(date) < 6 or len(date) > 7:
+        elif len(date) < 6 or len(date) > 8 :
             messagebox.showwarning("Date Warning!", "Date entered has too many or too little characters. Please enter a date in the following format: 'mm-dd-yy'")
             gui.dateEntry.delete(0,tk.END)
             return False
@@ -249,7 +256,22 @@ if __name__ == '__main__':
             n1 = int(input)
             nums.append(n1)
             return nums
-      
+    
+    def newOrExisting():
+       value = gui.option.get()
+       if value == "True":
+            print("Creating new Spread Sheet")
+            new = True
+            print(new)
+            return True
+       elif value == "False":
+            print("Going to Existing")
+            new = False
+            print(new)
+            return True
+       else:
+            print("An option must be selected")
+
     def upload():
         """
         Function to send data from entry fields to diskAnalyzer. We grab the entry fields' values and strip any 
@@ -266,7 +288,7 @@ if __name__ == '__main__':
         trays = gui.trayEntry.get() .rstrip().lstrip()
         pics = gui.picEntry.get().rstrip().lstrip()
         date = gui.dateEntry.get().rstrip().lstrip()
-        
+
         trayNumArr = getNumbers(trays)
         picNumArr = getNumbers(pics)
         numTrays = len(trayNumArr)
@@ -276,20 +298,23 @@ if __name__ == '__main__':
             return messagebox.showwarning("Input Warning!", "Current inputs from Tray/Picture entry fields will spawn too many threads. Use the following as a guide for entering data into tray/pictures entry fields: trays * pictures <= 8.")
             
 
-        if validateTP(trays, pics) and validateDate(date):
+        if validateTP(trays, pics) and validateDate(date) and newOrExisting():
             gui.trayEntry.config(state='disabled')      
             gui.picEntry.config(state='disabled')  
             gui.dateEntry.config(state='disabled')    
-            # calendarBtn.config(state='disabled')
             uploadBtn.config(state='disabled')
+            gui.r1.config(state='disabled')
+            gui.r2.config(state='disabled')
+            # calendarBtn.config(state='disabled')
             print(trays)
             print(pics)
             print(date)
             print("Tray Numbers are: " + str(trayNumArr))
             print("Picture Numbers are: " + str(picNumArr))
-            gui.status.grid(row = 7, column = 1, pady=(70,0))
+            gui.status.grid(row = 7, column = 1, pady=(50,0))
             gui.progress.grid(row=8, column = 1)
             gui.progress.start()
+
             
         return
                 
@@ -298,7 +323,7 @@ if __name__ == '__main__':
     # calendarBtn = tk.Button(root, text="Pick a Date", command=date)
     # calendarBtn.grid(row = 6, column = 1)
     uploadBtn = tk.Button(root, text= "Upload", command=upload, height = 1, width = 12 )
-    uploadBtn.grid(row= 6, column = 0)
+    uploadBtn.grid(row= 5, column = 0)
 
     root.mainloop()
 
