@@ -3,6 +3,7 @@
 import tkinter as tk
 from tkinter import *
 from tkinter import messagebox
+from tkinter import ttk
 
 #import calendarPicker as cp 
 
@@ -75,12 +76,29 @@ class analyzerGUI:
         self.dateEntry.bind("<FocusIn>", clearDateEntry)
 
 
+        self.progress = ttk.Progressbar(root, orient ="horizontal", length = 200, mode= "indeterminate")
+        self.bytes = 0
+        self.maxbytes = 0
+
+        def start(self):
+            self.progress["value"] = 0
+            self.maxbytes = 50000
+            self.progress["maximum"] = 50000
+            self.read_bytes()
+
+        def read_bytes(self):
+            '''simulate reading 500 bytes; update progress bar'''
+            self.bytes += 500
+            self.progress["value"] = self.bytes
+            if self.bytes < self.maxbytes:
+                # read more bytes after 100 ms
+                self.after(100, self.read_bytes)
 
 if __name__ == '__main__':
     #initializing the root window
     root = tk.Tk()
     #the size of the window
-    root.geometry('300x300')
+    root.geometry('350x300')
     root.title("LDA GUI v1.0")
     gui = analyzerGUI(root) #create new instance of the analyzerGUI with root as master.
     
@@ -227,8 +245,7 @@ if __name__ == '__main__':
             nums.append(n1)
             return nums
       
-
-        
+   
         
             
 
@@ -269,12 +286,10 @@ if __name__ == '__main__':
             print(date)
             print("Tray Numbers are: " + str(trayNumArr))
             print("Picture Numbers are: " + str(picNumArr))
-
-
-
-
             status = tk.Label(root, text="Sending inputs...", bd = 5)
             status.grid(row = 7, column = 1, pady=(70,0))
+            gui.progress.grid(row=8, column = 1)
+            gui.progress.start()
         return
                 
 
