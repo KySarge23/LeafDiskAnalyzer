@@ -8,7 +8,7 @@ from tkinter import ttk
 #import calendarPicker as cp 
 
 
-#Author(s): Erica Gitlin, Colton Eddy, Kyle Sargent
+#Author(s): Erica Gitlin, Colton Eddy, Kyle Sargent, Emily Box
 
 
 class analyzerGUI:
