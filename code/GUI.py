@@ -38,7 +38,7 @@ class analyzerGUI:
         self.menu.add_cascade(label='Help', menu=self.helpmenu) 
         self.helpmenu.add_command(label='About')
 
-        self.option = StringVar()
+        self.option = StringVar(value = "1")
         self.r1 = Radiobutton(master, text = "New Spreadsheet", value ="True" , var=self.option)
         self.r1.grid(row = 0, column = 0, padx = (0, 10))
         self.r2 = Radiobutton(master, text="Existing Spreadsheet", value="False", var=self.option)
@@ -83,7 +83,7 @@ class analyzerGUI:
 
         self.status = Label(root, text="Sending inputs...")
 
-        self.progress = ttk.Progressbar(root, orient ="horizontal", length = 200, mode= "indeterminate")
+        self.progress = ttk.Progressbar(root, orient ="horizontal", length = 150, mode= "indeterminate")
         self.bytes = 0
         self.maxbytes = 0
 
@@ -270,7 +270,7 @@ if __name__ == '__main__':
             print(new)
             return True
        else:
-            print("An option must be selected")
+            messagebox.showwarning("No Selection Warning!", "Neither new or existing spreadsheet selectors were picked, please choose one and retry.")
             return False
 
     def sendToAnalyzer():
