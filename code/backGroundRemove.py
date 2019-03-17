@@ -42,7 +42,7 @@ def backgroundRemove(x):
 
 
 def main():
-    backgroundRemove('../photos/9-15-18 2dpi/tray 1/1-160x271_T1S.tiff')
+    backgroundRemove('../photos/9-15-18 2dpi/tray 1/2-160x271_2.tiff')
 
 main()
     

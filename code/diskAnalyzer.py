@@ -195,7 +195,6 @@ def threadHandler(date, tray, picNum):
 
 def main():
     tk().withdraw() #we dont want root window to pop up so we get hide it.
-
    
     threads = [] #creates a list of all threads to be used
     date = input("Enter a date in the form of x-xx-xx xdpi:\n") #retrieve user input
