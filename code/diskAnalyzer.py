@@ -193,9 +193,66 @@ def threadHandler(date, tray, picNum):
             print("Invalid path detected, No file or directory resides in: \n" + path)
 
 
+def findOccurrences(s, ch):
+    """
+    Function to find occurances of a character in a string. only useful for when ',' is used in an entry field.
 
+    Input(s): s (String), ch (Character)
+    Output(s): a list of indicies in which ch was found in s.
+    Local Variable(s): None
+
+    """    
+    return [i for i, letter in enumerate(s) if letter == ch]
+
+def getNumbers(input):
+    """
+    Function to extract the numbers from the entry fields after they've been validated. 
+    This will grab the numbers found surrounding a '-' or multiple ',' in an entry field. 
+    Then will place either the range of numbers or sequence of numbers in a list
+    and return that to the Analyzer.
+
+    Input(s): input (String)
+    Output(s): nums[] (list of ints)
+    Local Variables: idx (int), n1/n2 (int), nums[] (list of ints), comms [] (list of indicies where ',' is found)
+
+    """
+
+    nums, comms = [], []
+
+    n1,n2 = 0,0
+
+    if '-' in input:
+        idx = input.index('-')
+        n1 = int(input[idx-1])
+        n2 = int(input[idx+1])
+        if n1 > n2: 
+            return messagebox.showwarning("Entry Warning!", "Left Hand Side of '-' is greater than Right Hand Side. Please fix the order and retry.")
+        else:
+            for i in range (n1, n2+1):
+                nums.append(i)
+            return nums
+    
+    if ',' in input and len(input) >= 3:
+        comms = findOccurrences(input, ',')
+        for idx in comms:
+            n1 = int(input[idx-1])
+            n2 = int(input[idx+1])
+            if n1 in nums:
+                nums.append(n2)
+            elif n2 in nums:
+                nums.append(n1)
+            else:
+                nums.append(n1)
+                nums.append(n2)
+        return nums
+
+    if len(input) == 1:
+        n1 = int(input)
+        nums.append(n1)
+        return nums
+        
 def main():
-
+    
     root = tk.Tk()
     #the size of the window
     root.geometry('350x300')
@@ -289,64 +346,6 @@ def main():
             if count == len(date):
                 return True
     
-    def findOccurrences(s, ch):
-        """
-        Function to find occurances of a character in a string. only useful for when ',' is used in an entry field.
-
-        Input(s): s (String), ch (Character)
-        Output(s): a list of indicies in which ch was found in s.
-        Local Variable(s): None
-
-        """    
-        return [i for i, letter in enumerate(s) if letter == ch]
-
-    def getNumbers(input):
-        """
-        Function to extract the numbers from the entry fields after they've been validated. 
-        This will grab the numbers found surrounding a '-' or multiple ',' in an entry field. 
-        Then will place either the range of numbers or sequence of numbers in a list
-        and return that to the Analyzer.
-
-        Input(s): input (String)
-        Output(s): nums[] (list of ints)
-        Local Variables: idx (int), n1/n2 (int), nums[] (list of ints), comms [] (list of indicies where ',' is found)
-
-        """
-
-        nums, comms = [], []
-
-        n1,n2 = 0,0
-
-        if '-' in input:
-            idx = input.index('-')
-            n1 = int(input[idx-1])
-            n2 = int(input[idx+1])
-            if n1 > n2: 
-                return messagebox.showwarning("Entry Warning!", "Left Hand Side of '-' is greater than Right Hand Side. Please fix the order and retry.")
-            else:
-                for i in range (n1, n2+1):
-                    nums.append(i)
-                return nums
-        
-        if ',' in input and len(input) >= 3:
-            comms = findOccurrences(input, ',')
-            for idx in comms:
-                n1 = int(input[idx-1])
-                n2 = int(input[idx+1])
-                if n1 in nums:
-                    nums.append(n2)
-                elif n2 in nums:
-                    nums.append(n1)
-                else:
-                    nums.append(n1)
-                    nums.append(n2)
-            return nums
-
-        if len(input) == 1:
-            n1 = int(input)
-            nums.append(n1)
-            return nums
-    
     def newOrExisting():
        value = gui.option.get()
        if value == "True":
@@ -379,9 +378,6 @@ def main():
         trayStr = gui.trayEntry.get() .rstrip().lstrip()
         picStr = gui.picEntry.get().rstrip().lstrip()
         dateStr = gui.dateEntry.get().rstrip().lstrip()
-
-        
-            
 
         if validateTP(trayStr, picStr) and validateDate(dateStr) and newOrExisting():
             trays = getNumbers(trayStr)
@@ -421,25 +417,11 @@ def main():
         return
                 
     uploadBtn = tk.Button(root, text= "Analyze", command=sendToAnalyzer, height = 1, width = 12 )
-    uploadBtn.grid(row= 5, column = 0)
-
-
-
-    
+    uploadBtn.grid(row= 5, column = 0)    
     # calendarBtn = tk.Button(root, text="Pick a Date", command=date)
     # calendarBtn.grid(row = 6, column = 1)
-    # threads = [] #creates a list of all threads to be used
-    # trays = trayNumArr
-    # if len(trays)*len(picNums) > 8: #this sets the max number of pictures that can be 
-    #     raise Exception("Too many Threads Started") #stops program from running if threads
-    # #start a new thread for every picture and tray, add it to the list, and start it
-    # for i in range(len(trays)):
-    #     for j in range(len(picNums)): 
-    #         t = thr.Thread(target = threadHandler, args = [date, trays[i], picNums[j]])
-    #         threads.append(t)
-    #         t.start()
-    # # for t in threads:
-    # #     t.join()
 
     root.mainloop()
+
+
 main()
