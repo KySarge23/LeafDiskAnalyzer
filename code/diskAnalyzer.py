@@ -4,15 +4,16 @@ import math
 import cv2 as cv
 import numpy as np
 import matplotlib.image as mpimg
-import tkinter
+import tkinter as tk
 import os
 import threading as thr
 import time
 import imghdr
 import sys
+import GUI
 from pathlib import Path as pth
-from tkinter import Tk as tk
 from tkinter.filedialog import askopenfilenames
+from tkinter import messagebox
 from matplotlib import pyplot as plt
 
 
@@ -194,24 +195,251 @@ def threadHandler(date, tray, picNum):
 
 
 def main():
-    tk().withdraw() #we dont want root window to pop up so we get hide it.
-   
-    threads = [] #creates a list of all threads to be used
-    date = input("Enter a date in the form of x-xx-xx xdpi:\n") #retrieve user input
-    trays = [1] #placeholder until user input is working properly
-    picNums = [2] #placeholder until user input is working properly
 
-    if len(trays)*len(picNums) > 8: #this sets the max number of pictures that can be 
-        raise Exception("Too many Threads Started") #stops program from running if threads
+    root = tk.Tk()
+    #the size of the window
+    root.geometry('350x300')
+    root.title("LDA GUI v1.0")
+    gui = GUI.analyzerGUI(root) #create new instance of the analyzerGUI with root as master.
     
-    #start a new thread for every picture and tray, add it to the list, and start it
-    for i in range(len(trays)):
-        for j in range(len(picNums)): 
-            t = thr.Thread(target = threadHandler, args = [date, trays[i], picNums[j]])
-            threads.append(t)
-            t.start()
-    
-    for t in threads:
-        t.join()
+    trayStr = ""
+    picStr = ""
+    dateStr = ""
 
+    numTrays = 0
+    numPics = 0
+
+    trays, pics, threads = [], [], []
+
+    # following lines uncomment if want to use calendarPicker.py 
+    # def date():
+    #     cp.DatePicker(format_str='%s-%02d-%s')
+
+    def validateTP(x,y):
+        """
+        
+        Function to validate the Tray/Picture entries. We initialize countx and county for counting correct or 
+        valid characters found from the inputs.
+        Then we loop over each string and check if the character is valid (e.g. digit, '-' or ','). 
+        If so we increment count, if not we show a warning with the invalid character 
+        and clear the entry field in which the invalid character was found. 
+        After character validation, we check if countx and county 
+        are equal to the length of the strings passed in, meaning that each character was valid.
+
+        Input(s): x (String), y (String)
+        Output(s): boolean value based on whether or not both strings are valid.
+        Local Varaible(s): countx (int), county (int)
+
+        """
+        if x == "":
+            messagebox.showwarning("No Entry Warning!", "No entry found in the Tray Entry Field. Please enter data in the following format: '1-3' or '1,2,3'.")
+            return False
+        if y == "":
+            messagebox.showwarning("No Entry Warning!", "No entry found in the Picture Entry Field. Please enter data in the following format: '1-3' or '1,2,3'.")
+            return False
+
+        countx, county = 0, 0
+        for i in x:
+            if i.isdigit() or i == '-' or i == ',':
+                countx += 1
+            else:
+                messagebox.showwarning("Entry warning!", "Incorrect character of: '" + i + "' in Tray Entry Field. Please enter in the following format: '1-3' or '1,2,3'.")
+                gui.trayEntry.delete(0,tk.END)                
+
+                return False     
+        for o in y:
+            if o.isdigit() or o == '-' or o == ',':
+                county += 1
+            else: 
+                messagebox.showwarning("Entry warning!", "Incorrect character of: '" + o + "' in Picture Entry Field. Please enter in the following format: '1-3' or '1,2,3'.")
+                gui.picEntry.delete(0,tk.END)                
+                return False
+
+        if countx == len(x) and county == len(y):
+            return True
+        
+    def validateDate(date):
+        """
+        Function to validate the date input by the user. We check if date is less than 6 because it allows for folders to be structured 
+        as d-m-yy as well. Otherwise we check for digits and the '-' character if anything else is found, 
+        then we warn the user about the found character and then clear the entry field for retrying.
+        
+        Input(s): date (String)
+        Output(s): boolen if count found == len of date 
+        Local Varaible(s): count (int)
+
+        """
+        if date == "":
+            messagebox.showwarning("No Entry Warning!", "No entry found in Date entry. Please enter a date in the following format: 'mm-dd-yy'.")
+            return False
+
+        elif len(date) < 6 or len(date) > 8 :
+            messagebox.showwarning("Date Warning!", "Date entered has too many or too little characters. Please enter a date in the following format: 'mm-dd-yy'")
+            gui.dateEntry.delete(0,tk.END)
+            return False
+        else:
+            count = 0
+            for i in date:
+                if i.isdigit() or i == '-':
+                    count+=1
+                else: 
+                    messagebox.showwarning("Entry warning!", "Incorrect character of: '" + i + "' in Date Entry Field. Please enter in the following format: mm-dd-yy")
+                    gui.dateEntry.delete(0,tk.END)
+                    return False
+            if count == len(date):
+                return True
+    
+    def findOccurrences(s, ch):
+        """
+        Function to find occurances of a character in a string. only useful for when ',' is used in an entry field.
+
+        Input(s): s (String), ch (Character)
+        Output(s): a list of indicies in which ch was found in s.
+        Local Variable(s): None
+
+        """    
+        return [i for i, letter in enumerate(s) if letter == ch]
+
+    def getNumbers(input):
+        """
+        Function to extract the numbers from the entry fields after they've been validated. 
+        This will grab the numbers found surrounding a '-' or multiple ',' in an entry field. 
+        Then will place either the range of numbers or sequence of numbers in a list
+        and return that to the Analyzer.
+
+        Input(s): input (String)
+        Output(s): nums[] (list of ints)
+        Local Variables: idx (int), n1/n2 (int), nums[] (list of ints), comms [] (list of indicies where ',' is found)
+
+        """
+
+        nums, comms = [], []
+
+        n1,n2 = 0,0
+
+        if '-' in input:
+            idx = input.index('-')
+            n1 = int(input[idx-1])
+            n2 = int(input[idx+1])
+            if n1 > n2: 
+                return messagebox.showwarning("Entry Warning!", "Left Hand Side of '-' is greater than Right Hand Side. Please fix the order and retry.")
+            else:
+                for i in range (n1, n2+1):
+                    nums.append(i)
+                return nums
+        
+        if ',' in input and len(input) >= 3:
+            comms = findOccurrences(input, ',')
+            for idx in comms:
+                n1 = int(input[idx-1])
+                n2 = int(input[idx+1])
+                if n1 in nums:
+                    nums.append(n2)
+                elif n2 in nums:
+                    nums.append(n1)
+                else:
+                    nums.append(n1)
+                    nums.append(n2)
+            return nums
+
+        if len(input) == 1:
+            n1 = int(input)
+            nums.append(n1)
+            return nums
+    
+    def newOrExisting():
+       value = gui.option.get()
+       if value == "True":
+            print("Creating new Spread Sheet")
+            new = True
+            print(new)
+            return True
+       elif value == "False":
+            print("Going to Existing")
+            new = False
+            print(new)
+            return True
+       else:
+            messagebox.showwarning("No Selection Warning!", "Neither new or existing spreadsheet selectors were picked, please choose one and retry.")
+            return False
+
+    def sendToAnalyzer():
+        """
+        Function to send data from entry fields to diskAnalyzer. We grab the entry fields' values and strip any 
+        whitespace from the front/back so that it doesnt mess up with our validation methods. 
+        Then we validate the entry fields and upon them returning true, 
+        we disable all buttons and add a status label to let the user know we're sending the inputs. 
+        
+        Input(s): None
+        Output(s) None
+        Local Varaible(s): None
+
+        """
+
+        trayStr = gui.trayEntry.get() .rstrip().lstrip()
+        picStr = gui.picEntry.get().rstrip().lstrip()
+        dateStr = gui.dateEntry.get().rstrip().lstrip()
+
+        
+            
+
+        if validateTP(trayStr, picStr) and validateDate(dateStr) and newOrExisting():
+            trays = getNumbers(trayStr)
+            pics = getNumbers(picStr)
+            numTrays = len(trays)
+            numPics = len(pics)
+            
+            if numPics * numTrays > 8:
+                return messagebox.showwarning("Input Warning!", "Current inputs from Tray/Picture entry fields will spawn too many threads. Use the following as a guide for entering data into tray/pictures entry fields: trays * pictures <= 8.")
+            
+            gui.trayEntry.config(state='disabled')      
+            gui.picEntry.config(state='disabled')  
+            gui.dateEntry.config(state='disabled')    
+            uploadBtn.config(state='disabled')
+            gui.r1.config(state='disabled')
+            gui.r2.config(state='disabled')
+            # calendarBtn.config(state='disabled')
+            print(trayStr)
+            print(picStr)
+            print(dateStr)
+            print("Tray Numbers are: " + str(trays))
+            print("Picture Numbers are: " + str(pics))
+            # gui.status.grid(row = 7, column = 1, pady=(50,0))
+            # gui.progress.grid(row=8, column = 1)
+            # gui.progress.start()
+
+            for i in range(len(trays)):
+                for j in range(len(pics)): 
+                    t = thr.Thread(target = threadHandler, args = [dateStr + " 2dpi", trays[i], pics[j]])
+                    threads.append(t)
+                    t.start()
+            
+            for  t in threads:
+                t.join()
+
+
+        return
+                
+    uploadBtn = tk.Button(root, text= "Analyze", command=sendToAnalyzer, height = 1, width = 12 )
+    uploadBtn.grid(row= 5, column = 0)
+
+
+
+    
+    # calendarBtn = tk.Button(root, text="Pick a Date", command=date)
+    # calendarBtn.grid(row = 6, column = 1)
+    # threads = [] #creates a list of all threads to be used
+    # trays = trayNumArr
+    # if len(trays)*len(picNums) > 8: #this sets the max number of pictures that can be 
+    #     raise Exception("Too many Threads Started") #stops program from running if threads
+    # #start a new thread for every picture and tray, add it to the list, and start it
+    # for i in range(len(trays)):
+    #     for j in range(len(picNums)): 
+    #         t = thr.Thread(target = threadHandler, args = [date, trays[i], picNums[j]])
+    #         threads.append(t)
+    #         t.start()
+    # # for t in threads:
+    # #     t.join()
+
+    root.mainloop()
 main()
