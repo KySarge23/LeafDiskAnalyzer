@@ -11,14 +11,15 @@ import time
 import imghdr
 import sys
 import GUI
+#import calendarpicker as cp
+
 from pathlib import Path as pth
 from tkinter.filedialog import askopenfilenames
 from tkinter import messagebox
 from matplotlib import pyplot as plt
 
-
-#Author(s): Kyle Sargent, Erica Gitlin, Connor Jansen
-#Version: 1.8
+#Author(s): Kyle Sargent, Erica Gitlin, Connor Jansen, Colton Eddy, Alex Wilson, Emily Box
+#Version: 2.0
 
 def findCircleArea(x):
 
@@ -91,9 +92,14 @@ def findCircleArea(x):
 
 def cannyEdgeDetection(x):
 
-    """Edge detection function. Utilizes canny edge detection to detect edges found in the picture
-       input will be cropped image from the findCircleArea() function.
-       output should be an image with found mildew/edges"""
+    """
+    Edge detection function. Utilizes canny edge detection to detect edges found in the picture
+    I
+    Input(s): x (path to photo -String)
+    Output(s): mildewArea (int)
+    Local Variable(s):  imgG (photo), edges (photo), ret/contours/hierarchy (list), area (int)    
+    
+    """ 
 
     print("Edge Detection Starting")
 
@@ -151,11 +157,16 @@ def cannyEdgeDetection(x):
 
 
 def threadHandler(date, tray, picNum):
-    '''
+    """
     This Function accepts the three user inputs from the main function/GUI as arguments.
     It then builds a valid filepath based on the arguments. Once a valid path is created,
     this function sends that path to the findCircleArea and cannyEdgeDetection functions.
-    '''
+
+    Input(s): date (String) , tray (int), picNum (int)
+    Output(s): None
+    Local Variable(s): path (String), dirName (String) , fName (String), circArea (int), mildewArea (int), mildewRatio (int)
+
+    """
     print(thr.current_thread())
 
     dirName = "../photos/" + date + "/tray " + str(tray) + "/"
@@ -258,13 +269,6 @@ def main():
     root.geometry('350x300')
     root.title("LDA GUI v1.0")
     gui = GUI.analyzerGUI(root) #create new instance of the analyzerGUI with root as master.
-    
-    trayStr = ""
-    picStr = ""
-    dateStr = ""
-
-    numTrays = 0
-    numPics = 0
 
     trays, pics, threads = [], [], []
 
@@ -274,7 +278,6 @@ def main():
 
     def validateTP(x,y):
         """
-        
         Function to validate the Tray/Picture entries. We initialize countx and county for counting correct or 
         valid characters found from the inputs.
         Then we loop over each string and check if the character is valid (e.g. digit, '-' or ','). 
@@ -347,27 +350,37 @@ def main():
                 return True
     
     def newOrExisting():
-       value = gui.option.get()
-       if value == "True":
-            print("Creating new Spread Sheet")
-            new = True
-            print(new)
-            return True
-       elif value == "False":
-            print("Going to Existing")
-            new = False
-            print(new)
-            return True
-       else:
-            messagebox.showwarning("No Selection Warning!", "Neither new or existing spreadsheet selectors were picked, please choose one and retry.")
-            return False
+        """
+        Function for determining whether a new spreadsheet or an existing spreadsheet will be used to hold data from the analyzing process.
+        We get the option selected from the radio buttons on the GUI and return True if one was selected, otherwise we show a 
+        messagebox warning letting the user know neither button was picked, and return false
+
+        Input(s): None
+        Output(s): True or False Boolean
+        Local Variable(s): value (String), new (Boolean)
+
+        """
+        value = gui.option.get()
+        if value == "True":
+                print("Creating new Spread Sheet")
+                new = True
+                print(new)
+                return True
+        elif value == "False":
+                print("Going to Existing")
+                new = False
+                print(new)
+                return True
+        else:
+                messagebox.showwarning("No Selection Warning!", "Neither new or existing spreadsheet selectors were picked, please choose one and retry.")
+                return False
 
     def sendToAnalyzer():
         """
         Function to send data from entry fields to diskAnalyzer. We grab the entry fields' values and strip any 
         whitespace from the front/back so that it doesnt mess up with our validation methods. 
         Then we validate the entry fields and upon them returning true, 
-        we disable all buttons and add a status label to let the user know we're sending the inputs. 
+        we disable all buttons and then run the analyzer methods with the validated data gained from the GUI.
         
         Input(s): None
         Output(s) None
@@ -412,7 +425,7 @@ def main():
             
             for  t in threads:
                 t.join()
-
+ 
 
         return
                 
