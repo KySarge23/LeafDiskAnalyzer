@@ -364,8 +364,10 @@ def main():
         value = gui.option.get()
         if value == "True":
                 print("Creating new Spread Sheet")
-                workbook = xlsxwriter.Workbook("./placeholderbook.xlsx") #creates new workbook (currently creates a single placeholder book in the current directory)
-                worksheet_tray = workbook.add_worksheet(GUI.analyzerGUI.trayNumber) #creates new worksheet in workbook based on the tray number entered in the GUI
+                workbook = xlsxwriter.Workbook('placeholderbook.xlsx') #creates new workbook (currently creates a single placeholder book in the current directory)
+                for tray in trays:
+                    worksheet_tray = workbook.add_worksheet('Tray1')  #creates new worksheet in workbook based on the tray number entered in the GUI
+                workbook.close()
                 new = True
                 print(new)
                 return True
