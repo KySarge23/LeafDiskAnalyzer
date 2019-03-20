@@ -11,6 +11,7 @@ import time
 import imghdr
 import sys
 import GUI
+import xlsxwriter
 #import calendarpicker as cp
 
 from pathlib import Path as pth
@@ -363,6 +364,8 @@ def main():
         value = gui.option.get()
         if value == "True":
                 print("Creating new Spread Sheet")
+                workbook = xlsxwriter.Workbook("./placeholderbook") #creates new workbook (currently creates a single placeholder book in the current directory)
+                worksheet_tray = workbook.add_worksheet(GUI.analyzerGUI.trayNumber) #creates new worksheet in workbook based on the tray number entered in the GUI
                 new = True
                 print(new)
                 return True
