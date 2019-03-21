@@ -13,6 +13,7 @@ import sys
 import GUI
 import xlsxwriter
 #import calendarpicker as cp
+import xlrd
 
 from pathlib import Path as pth
 from tkinter.filedialog import askopenfilenames
@@ -373,6 +374,9 @@ def main():
                 return True
         elif value == "False":
                 print("Going to Existing")
+                file = filedialog.askopenfilename() #lets user browse for what spreadsheet they want to open
+                workbook = xlrd.open_workbook(file) #opens the file selected
+                worksheet = workbook.sheet_by_index(0) #starts from the first spreadsheet
                 new = False
                 print(new)
                 return True
