@@ -1,0 +1,4 @@
+[insert path to python.exe] [path to diskanalyzer.py]
+pause
+
+**Remove this line before saving but save as .bat***
