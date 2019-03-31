@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+#Imports for functionalities
 import math
 import cv2 as cv
 import numpy as np
@@ -10,26 +11,31 @@ import threading as thr
 import time
 import imghdr
 import sys
-import GUI
-import xlsxwriter
-#import calendarpicker as cp
-import xlrd
+import glob
+import openpyxl
 
+#GUI Imports
+import GUI
+import calendarPicker as cp
+
+#Specific functionality imports
 from pathlib import Path as pth
-from tkinter.filedialog import askopenfilenames
+from threading import Lock 
+from tkinter.filedialog import askopenfilename, asksaveasfilename
 from tkinter import messagebox
 from matplotlib import pyplot as plt
 
 #Author(s): Kyle Sargent, Erica Gitlin, Connor Jansen, Colton Eddy, Alex Wilson, Emily Box
-#Version: 2.0
+#Version: 3
 
-def findCircleArea(x):
+def calculateMildew(path):
 
     """Area finding function, Will utilize HoughCircle method to detect circles
        within the photo or hard coded method to detect circles . Then will use that circle to find the area within it which
        is what will be used later in the edge detection"""
 
-    img = cv.imread(x,0) #read in as Grayscale
+    img = cv.imread(path,0) #read in as Grayscale
+    img = cv.resize(img,(423,280))
     img = cv.medianBlur(img,5) #add blur to reduce noise on photo.
     cimg = cv.cvtColor(img,cv.COLOR_GRAY2BGR) #convert back to BGR scale for the drawn circle to show up as whatever color specified.
     """The following lines can be used to have an algorithm detect circles for us.
@@ -45,10 +51,10 @@ def findCircleArea(x):
         1. First, we create the accumulator(a two dimensional array) space, which is made up of a cell for each pixel.
            Initially each cell is set to 0.
         2. For each edge point (i, j) in the image, increment all cells which according to the equation of a circle (i-a)^{2}+(j-b)^{2}=r^{2}
-           could be the center of a circle.
-           These cells are represented by the letter a in the equation.
-        3. For each possible value of  a found in the previous step, find all possible values of b which satisfy the equation.
-        4. Search for local maxima in the accumulator space. These cells represent circles that were detected by the algorithm.
+           could be the center of a circle. 
+           These cells are represented by th    e letter a in the equation.
+        3. For each possible value of  a fou    nd in the previous step, find all possible values of b which satisfy the equation.
+        4. Search for local maxima in the ac    cumulator space. These cells represent circles that were detected by the algorithm.
 
         If we do not know the radius of the circle we are trying to locate beforehand,
         we can use a three-dimensional accumulator space to search for circles with an arbitrary radius.
@@ -82,26 +88,13 @@ def findCircleArea(x):
 
 
     area = math.pi * rad ** 2 #calculate the area of the circle detected in pixels
-    print("Area of circle drawn is: " + str(int(area))+"px\n")
+    # print("Area of circle drawn is: " + str(int(area))+"px\n")
 
-    cimg = cimg[0:h, 30:w-30]
-    cv.imshow(x ,cimg)
-    cv.waitKey(0)
-    cv.destroyAllWindows()
-    cv.imwrite("crop.png" , cimg)
-
-    return area
-
-def cannyEdgeDetection(x):
-
-    """
-    Edge detection function. Utilizes canny edge detection to detect edges found in the picture
-    I
-    Input(s): x (path to photo -String)
-    Output(s): mildewArea (int)
-    Local Variable(s):  imgG (photo), edges (photo), ret/contours/hierarchy (list), area (int)    
-    
-    """ 
+    # cimg = cimg[0:h, 30:w-30]
+    # cv.imshow(x ,cimg)
+    # cv.waitKey(0)
+    # cv.destroyAllWindows()
+    # cv.imwrite("crop.png" , cimg)
 
     print("Edge Detection Starting")
 
@@ -113,7 +106,6 @@ def cannyEdgeDetection(x):
     #Reading of the same photo, in color for displaying and grayscale for edgeDetection.
     #imgC = cv.imread(x,1)
 
-    imgG = cv.imread(x,0)
 
     #cv.imshow('Original', img)
 
@@ -123,42 +115,34 @@ def cannyEdgeDetection(x):
     #use canny algorithm for edge detection
     #see https://docs.opencv.org/3.4/da/d22/tutorial_py_canny.html
     #for more details.
-    edges = cv.Canny(imgG,145,200)
-    cv.imshow("edges", edges)
-    cv.waitKey(0)
+    edges = cv.Canny(img,120,200)
     #Save image into photos folder for now. so can be used in analyzeDisks method
-    cv.destroyAllWindows()
     print("Edge Detection Complete")
-    print("Closing window")
 
     #we now set a threshold using cv.threshhold. This will help to detect possible
     #contours that are greater than the value (127,255,0), a color which was detected
     #on the leaf that is dark green. This is the baseline color. Essentially this is
     #the normal color of the image.
-    ret, imgG = cv.threshold(imgG,130,255,cv.ADAPTIVE_THRESH_MEAN_C)
-    mask = np.zeros(imgG.shape,np.uint8)
+    ret, edges = cv.threshold(edges,130,255,cv.ADAPTIVE_THRESH_MEAN_C)
+    mask = np.zeros(edges.shape,np.uint8)
     #we must now find the contours. We apply the findContours using our threshold value.
     #we want the contours as a list not as a tree. The next parameter is extremely important
     #this is the method of approximating the contours. The Chain Approximation finds contours
     #that are relatively the same intensity and throws out redundant points
-    contours, hierarchy = cv.findContours(imgG,cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv.findContours(edges, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
 
     #we create a local variable called total_area. We then loop through all contours and add the area to the
     #running total. We return the int value in pixels.
 
-    mildewArea = 0
+    mildewRatio = 0
     for cont in contours:
-        area = cv.contourArea(cont)
-        mildewArea += area
+        contArea = cv.contourArea(cont)
+        mildewRatio += contArea
 
-    cv.imshow("photo", imgG)
-    cv.waitKey(0)
-    cv.destroyAllWindows()
-
-    return mildewArea
+    return mildewRatio / area * 100
 
 
-def threadHandler(date, tray, picNum):
+def threadHandler(date, trayNum, picNum, spreadsheet):
     """
     This Function accepts the three user inputs from the main function/GUI as arguments.
     It then builds a valid filepath based on the arguments. Once a valid path is created,
@@ -166,42 +150,38 @@ def threadHandler(date, tray, picNum):
 
     Input(s): date (String) , tray (int), picNum (int)
     Output(s): None
-    Local Variable(s): path (String), dirName (String) , fName (String), circArea (int), mildewArea (int), mildewRatio (int)
+    Local Variable(s): path (String), dirName (String) , fName (String), circArea (int), mildewRatio (int), mildewRatio (int)
 
     """
     print(thr.current_thread())
 
-    dirName = "../photos/" + date + "/tray " + str(tray) + "/"
-    fName = str(picNum) + "-160x271_" + str(picNum)
+    date = glob.glob("../photos/"+ date + "*", recursive=True)[0]
 
-    path = dirName + fName
-    path = os.path.abspath(path)
+    tray = 'tray '+ str(trayNum)
+    dirName = date + "/" + tray + "/"
+    fName = str(picNum) + "-160x271_" + str(picNum)
+    path = os.path.abspath(dirName + fName)
 
     if os.path.exists(path + ".png"): #validate the path
-            print("Valid path found, staging for analyzing..")
             path = path + ".png"
-            circArea = findCircleArea(path)
-            mildewArea = cannyEdgeDetection(path)
-            mildewRatio = mildewArea/circArea * 100
-            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+            mildewRatio = calculateMildew(path)
+            return print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+
     elif os.path.exists(path + ".jpeg"): #validate the path
             path = path + ".jpeg"
-            print("Valid path found, staging for analyzing..\n")
-            findCircleArea(path)
-            cannyEdgeDetection(path)
+            mildewRatio = calculateMildew(path)
+            return print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+
     elif os.path.exists(path + ".tiff"): #validate the path
             path = path + ".tiff"
-            print("Valid path found, staging for analyzing..\n")
-            circArea = findCircleArea(path)
-            mildewArea = cannyEdgeDetection(path)
-            mildewRatio = mildewArea/circArea * 100
-            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+            mildewRatio = calculateMildew(path)
+            return print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+
     elif os.path.exists(path + ".tif"): #validate the path
             path = path + ".tif"
-            circArea = findCircleArea(path)
-            mildewArea = cannyEdgeDetection(path)
-            mildewRatio = mildewArea/circArea * 100
-            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+            mildewRatio = calculateMildew(path)            
+            return print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+            
     else: #let user know the software has detected an invalid path
             print("Invalid path detected, No file or directory resides in: \n" + path)
 
@@ -264,19 +244,21 @@ def getNumbers(input):
         nums.append(n1)
         return nums
         
+def date():
+    cp.DatePicker(format_str='%01d-%02d-%s')
+
 def main():
     
     root = tk.Tk()
     #the size of the window
     root.geometry('350x300')
-    root.title("LDA GUI v1.0")
+    root.title("LDA GUI v2S.0")
     gui = GUI.analyzerGUI(root) #create new instance of the analyzerGUI with root as master.
 
     trays, pics, threads = [], [], []
+    workbook = ""
 
     # following lines uncomment if want to use calendarPicker.py 
-    # def date():
-    #     cp.DatePicker(format_str='%s-%02d-%s')
 
     def validateTP(x,y):
         """
@@ -328,35 +310,50 @@ def main():
         
         Input(s): date (String)
         Output(s): boolen if count found == len of date 
-        Local Varaible(s): count (int)
+        Local Varaible(s): count (int) , dashes (list of indicies), numCount (int)
 
         """
+
         if date == "":
             messagebox.showwarning("No Entry Warning!", "No entry found in Date entry. Please enter a date in the following format: 'mm-dd-yy'.")
             return False
 
         elif len(date) < 6 or len(date) > 8 :
-            messagebox.showwarning("Date Warning!", "Date entered has too many or too little characters. Please enter a date in the following format: 'mm-dd-yy'")
+            messagebox.showwarning("Date Warning!", "Date entered has too many or too little characters. Please enter a date in the following format: 'mm-dd-yy'.")
             gui.dateEntry.delete(0,tk.END)
             return False
         else:
+            dashes = findOccurrences(date, '-')
+            numCount = 0
+            s1 = date[0:dashes[1]]
+            s2 = date[dashes[1]:]
+            s1 = s1.split('-')
+            s2 = s2.split('-')
+
+            for str in s1 and s2:
+                if len(str) > 2:
+                    messagebox.showwarning("Incorrect Date Warning!", "An incorrect date of: "+ date +" has been found. Please enter a date in the following format: 'mm-dd-yy'.")
+                    gui.dateEntry.delete(0, tk.END)
+                    return False
+
             count = 0
             for i in date:
                 if i.isdigit() or i == '-':
                     count+=1
-                else: 
-                    gui.dateEntry.delete(0,tk.END)
+                else:
+                    messagebox.showwarning("Incorrect Character Warning!", "Incorrect character of: " + i +" has been found. Only use the following characters: '-'.")
                     return False
+
             if count == len(date):
                 return True
-    
-    def newOrExisting():
+
+    def newOrExisting(trays):
         """
         Function for determining whether a new spreadsheet or an existing spreadsheet will be used to hold data from the analyzing process.
         We get the option selected from the radio buttons on the GUI and return True if one was selected, otherwise we show a 
         messagebox warning letting the user know neither button was picked, and return false
 
-        Input(s): None
+        Input(s): trays (list of trays gained from user input)
         Output(s): True or False Boolean
         Local Variable(s): value (String), new (Boolean)
 
@@ -364,23 +361,21 @@ def main():
         value = gui.option.get()
         if value == "True":
                 print("Creating new Spread Sheet")
-                workbook = xlsxwriter.Workbook('placeholderbook.xlsx')1 #creates new workbook (currently creates a single placeholder book in the current directory
-                worksheet_tray = workbook.add_worksheet(gui.trayEntry.get())  #creates new worksheet in workbook based on the tray number entered in the GUI
-                workbook.close()
-                new = True
-                print(new)
-                return True
+                wb = openpyxl.Workbook()
+                rm = wb['Sheet']
+                wb.remove(rm)
+
+                for tray in trays:
+                    wb.create_sheet("tray " + str(tray))
+                
+                file = asksaveasfilename(initialdir = ".",title = "Save As",filetypes = (("xlsx","*.xlsx"),("All Files","*.*"))) #creates new workbook (currently creates a single placeholder book in the current directory
+                wb.save(file)
+                return file
+
         elif value == "False":
                 print("Going to Existing")
-                file = filedialog.askopenfilename() #lets user browse for what spreadsheet they want to open
-                workbook = xlrd.open_workbook(file) #opens the file selected
-                worksheet = workbook.sheet_by_index(0) #starts from the first spreadsheet
-                new = False
-                print(new)
-                return True
-        else:
-                messagebox.showwarning("No Selection Warning!", "Neither new or existing spreadsheet selectors were picked, please choose one and retry.")
-                return False
+                file = askopenfilename(initialdir = ".", title = "Open File", filetypes = (("xlsx","*.xlsx"),("All Files","*.*"))) #lets user browse for what spreadsheet they want to open
+                return file
 
     def sendToAnalyzer():
         """
@@ -395,15 +390,21 @@ def main():
 
         """
 
-        trayStr = gui.trayEntry.get() .rstrip().lstrip()
+        trayStr = gui.trayEntry.get().rstrip().lstrip()
         picStr = gui.picEntry.get().rstrip().lstrip()
         dateStr = gui.dateEntry.get().rstrip().lstrip()
 
-        if validateTP(trayStr, picStr) and validateDate(dateStr) and newOrExisting():
+        if validateTP(trayStr, picStr) and validateDate(dateStr):
             trays = getNumbers(trayStr)
             pics = getNumbers(picStr)
+            workbook = newOrExisting(trays)
+            print(workbook)
+
             numTrays = len(trays)
             numPics = len(pics)
+
+            if workbook == "":
+                return messagebox.showwarning("No Selection Warning!", "Neither new or existing spreadsheet selectors were picked, please choose one and retry.")
             
             if numPics * numTrays > 8:
                 return messagebox.showwarning("Input Warning!", "Current inputs from Tray/Picture entry fields will spawn too many threads. Use the following as a guide for entering data into tray/pictures entry fields: trays * pictures <= 8.")
@@ -414,7 +415,7 @@ def main():
             uploadBtn.config(state='disabled')
             gui.r1.config(state='disabled')
             gui.r2.config(state='disabled')
-            # calendarBtn.config(state='disabled')
+            calendarBtn.config(state='disabled')
             print(trayStr)
             print(picStr)
             print(dateStr)
@@ -423,25 +424,22 @@ def main():
             # gui.status.grid(row = 7, column = 1, pady=(50,0))
             # gui.progress.grid(row=8, column = 1)
             # gui.progress.start()
-
+            
             for i in range(len(trays)):
                 for j in range(len(pics)): 
-                    t = thr.Thread(target = threadHandler, args = [dateStr + " 2dpi", trays[i], pics[j]])
+                    t = thr.Thread(target = threadHandler, args = [dateStr, trays[i], pics[j], workbook])
                     threads.append(t)
                     t.start()
             
             for  t in threads:
                 t.join()
  
-
         return
                 
-    uploadBtn = tk.Button(root, text= "Analyze", command=sendToAnalyzer, height = 1, width = 12 )
+    uploadBtn = tk.Button(root, text= "Analyze", command=sendToAnalyzer, height = 1, width = 5)
     uploadBtn.grid(row= 5, column = 0)    
-    # calendarBtn = tk.Button(root, text="Pick a Date", command=date)
-    # calendarBtn.grid(row = 6, column = 1)
-
+    calendarBtn = tk.Button(root, text="Pick a Date", command=date)
+    calendarBtn.grid(row = 5, column = 1)
     root.mainloop()
-
 
 main()
