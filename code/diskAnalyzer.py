@@ -12,7 +12,7 @@ import time
 import imghdr
 import sys
 import glob
-import openpyxl
+import openpyxl,openpyxl.styles
 
 #GUI Imports
 import GUI
@@ -20,7 +20,6 @@ import calendarPicker as cp
 
 #Specific functionality imports
 from pathlib import Path as pth
-from threading import Lock 
 from tkinter.filedialog import askopenfilename, asksaveasfilename
 from tkinter import messagebox
 from matplotlib import pyplot as plt
@@ -28,6 +27,33 @@ from matplotlib import pyplot as plt
 #Author(s): Kyle Sargent, Erica Gitlin, Connor Jansen, Colton Eddy, Alex Wilson, Emily Box
 #Version: 3
 
+
+
+thrLock = thr.Lock()
+
+def putDateInExcel(value, workbookName,sheet, col, row):
+    
+    wb = openpyxl.load_workbook(workbookName)
+    ws = wb[sheet]
+    #ws['A1'] = i
+    d = ws.cell(row = row, column= col, value= value)
+    d.alignment = openpyxl.styles.Alignment(horizontal = "center" , vertical = "center")
+    wb.save(workbookName)
+    return
+
+
+def writeToCell(value, workbookName, sheet):
+    wb = openpyxl.load_workbook(workbookName)
+    ws = wb[sheet]
+
+    for i in range(2, 25): #limit to 23 runs
+        for j in range(1,25): #limit to 24 runs
+            if ws.cell(i,j).value != None:
+                continue
+            else:
+                ws.cell(i,j).value = value
+                wb.save(workbookName)
+                return
 def calculateMildew(path):
 
     """Area finding function, Will utilize HoughCircle method to detect circles
@@ -155,11 +181,20 @@ def threadHandler(date, trayNum, picNum, spreadsheet):
     """
     print(thr.current_thread())
 
-    date = glob.glob("../photos/"+ date + "*", recursive=True)[0]
 
+    date = glob.glob("../photos/"+ date + "*", recursive=True)[0]
     tray = 'tray '+ str(trayNum)
     dirName = date + "/" + tray + "/"
     fName = str(picNum) + "-160x271_" + str(picNum)
+
+
+    thrLock.acquire()
+    print("acquired lock")
+    putDateInExcel(date[10:], spreadsheet, tray, 1,1)
+    print("releasing lock")
+    thrLock.release()
+
+
     path = os.path.abspath(dirName + fName)
 
     if os.path.exists(path + ".png"): #validate the path
@@ -179,7 +214,10 @@ def threadHandler(date, trayNum, picNum, spreadsheet):
 
     elif os.path.exists(path + ".tif"): #validate the path
             path = path + ".tif"
-            mildewRatio = calculateMildew(path)            
+            mildewRatio = calculateMildew(path)
+            thrLock.acquire()
+            writeToCell(mildewRatio, spreadsheet, tray)
+            thrLock.release()
             return print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
             
     else: #let user know the software has detected an invalid path
@@ -366,9 +404,13 @@ def main():
                 wb.remove(rm)
 
                 for tray in trays:
-                    wb.create_sheet("tray " + str(tray))
+                    ws = wb.create_sheet("tray " + str(tray))
+                    wb.normal = ws
+                    ws.merge_cells('A1:D1')
                 
-                file = asksaveasfilename(initialdir = ".",title = "Save As",filetypes = (("xlsx","*.xlsx"),("All Files","*.*"))) #creates new workbook (currently creates a single placeholder book in the current directory
+
+
+                file = asksaveasfilename(initialdir = ".",title = "Save As",filetypes = (("xlsx","*.xlsx"),("All Files","*.*"))) + ".xlsx" #creates new workbook (currently creates a single placeholder book in the current directory
                 wb.save(file)
                 return file
 
@@ -403,28 +445,10 @@ def main():
             numTrays = len(trays)
             numPics = len(pics)
 
-            if workbook == "":
-                return messagebox.showwarning("No Selection Warning!", "Neither new or existing spreadsheet selectors were picked, please choose one and retry.")
-            
             if numPics * numTrays > 8:
                 return messagebox.showwarning("Input Warning!", "Current inputs from Tray/Picture entry fields will spawn too many threads. Use the following as a guide for entering data into tray/pictures entry fields: trays * pictures <= 8.")
             
-            gui.trayEntry.config(state='disabled')      
-            gui.picEntry.config(state='disabled')  
-            gui.dateEntry.config(state='disabled')    
-            uploadBtn.config(state='disabled')
-            gui.r1.config(state='disabled')
-            gui.r2.config(state='disabled')
-            calendarBtn.config(state='disabled')
-            print(trayStr)
-            print(picStr)
-            print(dateStr)
-            print("Tray Numbers are: " + str(trays))
-            print("Picture Numbers are: " + str(pics))
-            # gui.status.grid(row = 7, column = 1, pady=(50,0))
-            # gui.progress.grid(row=8, column = 1)
-            # gui.progress.start()
-            
+    
             for i in range(len(trays)):
                 for j in range(len(pics)): 
                     t = thr.Thread(target = threadHandler, args = [dateStr, trays[i], pics[j], workbook])
@@ -440,6 +464,10 @@ def main():
     uploadBtn.grid(row= 5, column = 0)    
     calendarBtn = tk.Button(root, text="Pick a Date", command=date)
     calendarBtn.grid(row = 5, column = 1)
+
     root.mainloop()
+
+
+
 
 main()
