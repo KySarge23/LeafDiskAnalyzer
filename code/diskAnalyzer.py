@@ -361,17 +361,12 @@ def main():
         value = gui.option.get()
         if value == "True":
                 print("Creating new Spread Sheet")
-                wb = openpyxl.Workbook()
-                rm = wb['Sheet']
-                wb.remove(rm)
-
-                for tray in trays:
-                    wb.create_sheet("tray " + str(tray))
-                
-                file = asksaveasfilename(initialdir = ".",title = "Save As",filetypes = (("xlsx","*.xlsx"),("All Files","*.*"))) #creates new workbook (currently creates a single placeholder book in the current directory
-                wb.save(file)
-                return file
-
+                workbook = xlsxwriter.Workbook('placeholderbook.xlsx') #creates new workbook (currently creates a single placeholder book in the current directory
+                worksheet_tray = workbook.add_worksheet(gui.trayEntry.get())  #creates new worksheet in workbook based on the tray number entered in the GUI
+                workbook.close()
+                new = True
+                print(new)
+                return True
         elif value == "False":
                 print("Going to Existing")
                 file = askopenfilename(initialdir = ".", title = "Open File", filetypes = (("xlsx","*.xlsx"),("All Files","*.*"))) #lets user browse for what spreadsheet they want to open
