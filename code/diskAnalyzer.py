@@ -28,32 +28,64 @@ from matplotlib import pyplot as plt
 #Version: 3
 
 
-
 thrLock = thr.Lock()
 
-def putDateInExcel(value, workbookName,sheet, col, row):
+def writeToExcel(value, workbookName, sheet, date):
+
+    """
+    This function will handle any writing to the spreadsheet document that is required.
+    It will take
+
+    Input(s): 
+    Output(s): 
+    Local Variable(s):  wb (excel workbook that is opened), ws (worksheet from opened workbook), startCol/startRow (int), 
     
+    """
+
     wb = openpyxl.load_workbook(workbookName)
     ws = wb[sheet]
-    #ws['A1'] = i
-    d = ws.cell(row = row, column= col, value= value)
-    d.alignment = openpyxl.styles.Alignment(horizontal = "center" , vertical = "center")
+    startCol, startRow = 1, 1
+    dateCol, dateRow = 0, 0
+
+
+    if ws.cell(startRow,startCol).value == None:
+        dateCell = ws.cell(row = startRow, column = startCol, value = date)
+        dateCell.alignment = openpyxl.styles.Alignment(horizontal = 'center', vertical = 'center')
+        dateCol = startCol
+        dateRow = startRow
+        ws.merge_cells(dateCell.coordinate + ':' + ws.cell(dateRow, dateCol + 3).coordinate)
+    else:
+        for i in range(startCol, 25, 10):
+            if ws.cell(row = startRow, column = i).value != None:
+                continue
+            else: 
+                dateCell = ws.cell(row = startRow, column = i, value = date)
+                dateCell.alignment = openpyxl.styles.Alignment(horizontal = 'center', vertical = 'center')
+                dateCol = i
+                dateRow = startRow
+                ws.merge_cells(dateCell.coordinate + ':' + ws.cell(dateRow, dateCol + 3).coordinate)
+                break
+
+    ratioRow = dateRow + 1
+    ratioCol = dateCol + 1
+
+    for i in range(ratioRow, 27): #limit to 25 runs for now
+        for j in range(ratioCol,27): #limit to 25 runs for now
+            if ws.cell(ratioRow , ratioCol).value != None:
+                continue
+            else:
+                ratioCell = ws.cell(ratioRow , ratioCol, value = str(value) + "%")
+                ratioCell.number_format = "0.00%"
+                wb.save(workbookName)
+                return
+
+
     wb.save(workbookName)
     return
 
 
-def writeToCell(value, workbookName, sheet):
-    wb = openpyxl.load_workbook(workbookName)
-    ws = wb[sheet]
 
-    for i in range(2, 25): #limit to 23 runs
-        for j in range(1,25): #limit to 24 runs
-            if ws.cell(i,j).value != None:
-                continue
-            else:
-                ws.cell(i,j).value = value
-                wb.save(workbookName)
-                return
+
 def calculateMildew(path):
 
     """Area finding function, Will utilize HoughCircle method to detect circles
@@ -61,7 +93,7 @@ def calculateMildew(path):
        is what will be used later in the edge detection"""
 
     img = cv.imread(path,0) #read in as Grayscale
-    img = cv.resize(img,(423,280))
+    img = cv.resize(img,(423,280)) #resize image, for easier reading and faster execution.
     img = cv.medianBlur(img,5) #add blur to reduce noise on photo.
     cimg = cv.cvtColor(img,cv.COLOR_GRAY2BGR) #convert back to BGR scale for the drawn circle to show up as whatever color specified.
     """The following lines can be used to have an algorithm detect circles for us.
@@ -188,35 +220,37 @@ def threadHandler(date, trayNum, picNum, spreadsheet):
     fName = str(picNum) + "-160x271_" + str(picNum)
 
 
-    thrLock.acquire()
-    print("acquired lock")
-    putDateInExcel(date[10:], spreadsheet, tray, 1,1)
-    print("releasing lock")
-    thrLock.release()
-
-
     path = os.path.abspath(dirName + fName)
 
     if os.path.exists(path + ".png"): #validate the path
             path = path + ".png"
             mildewRatio = calculateMildew(path)
+            thrLock.acquire()
+            writeToExcel(mildewRatio, spreadsheet, tray, date[10:])
+            thrLock.release()
             return print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
 
     elif os.path.exists(path + ".jpeg"): #validate the path
             path = path + ".jpeg"
             mildewRatio = calculateMildew(path)
+            thrLock.acquire()
+            writeToExcel(mildewRatio, spreadsheet, tray, date[10:])
+            thrLock.release()
             return print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
 
     elif os.path.exists(path + ".tiff"): #validate the path
             path = path + ".tiff"
             mildewRatio = calculateMildew(path)
+            thrLock.acquire()
+            writeToExcel(mildewRatio, spreadsheet, tray, date[10:])
+            thrLock.release()
             return print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
 
     elif os.path.exists(path + ".tif"): #validate the path
             path = path + ".tif"
             mildewRatio = calculateMildew(path)
             thrLock.acquire()
-            writeToCell(mildewRatio, spreadsheet, tray)
+            writeToExcel(mildewRatio, spreadsheet, tray, date[10:])
             thrLock.release()
             return print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
             
@@ -290,7 +324,7 @@ def main():
     root = tk.Tk()
     #the size of the window
     root.geometry('350x300')
-    root.title("LDA GUI v2S.0")
+    root.title("LDA GUI v3.0")
     gui = GUI.analyzerGUI(root) #create new instance of the analyzerGUI with root as master.
 
     trays, pics, threads = [], [], []
@@ -405,11 +439,7 @@ def main():
 
                 for tray in trays:
                     ws = wb.create_sheet("tray " + str(tray))
-                    wb.normal = ws
-                    ws.merge_cells('A1:D1')
                 
-
-
                 file = asksaveasfilename(initialdir = ".",title = "Save As",filetypes = (("xlsx","*.xlsx"),("All Files","*.*"))) + ".xlsx" #creates new workbook (currently creates a single placeholder book in the current directory
                 wb.save(file)
                 return file
@@ -417,6 +447,13 @@ def main():
         elif value == "False":
                 print("Going to Existing")
                 file = askopenfilename(initialdir = ".", title = "Open File", filetypes = (("xlsx","*.xlsx"),("All Files","*.*"))) #lets user browse for what spreadsheet they want to open
+                wb = openpyxl.load_workbook(file)
+                wsheets = wb.sheetnames
+                for tray in trays:
+                    if "tray " + str(tray) not in wsheets:
+                        ws = wb.create_sheet("tray " + str(tray))
+
+                wb.save(file)
                 return file
 
     def sendToAnalyzer():
@@ -448,6 +485,8 @@ def main():
             if numPics * numTrays > 8:
                 return messagebox.showwarning("Input Warning!", "Current inputs from Tray/Picture entry fields will spawn too many threads. Use the following as a guide for entering data into tray/pictures entry fields: trays * pictures <= 8.")
             
+            if workbook == "":
+                return messagebox.showwarning("No Save/Existing Spreadsheet Name Warning!", "No name has been selected for the spreadsheet you wish to use. Please retry.")
     
             for i in range(len(trays)):
                 for j in range(len(pics)): 
