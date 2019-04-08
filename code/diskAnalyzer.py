@@ -227,7 +227,7 @@ def threadHandler(date, trayNum, picNum, spreadsheet):
             path = path + ".png"
             mildewRatio = calculateMildew(path)
             thrLock.acquire()
-            writeToExcel(mildewRatio, spreadsheet, tray, date[10:])
+            writeToEx   cel(mildewRatio, spreadsheet, tray, date[10:])
             thrLock.release()
             return print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
 
