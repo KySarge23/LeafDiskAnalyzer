@@ -12,7 +12,7 @@ import time
 import imghdr
 import sys
 import glob
-import openpyxl,openpyxl.styles
+import openpyxl, openpyxl.styles
 
 #GUI Imports
 import GUI
@@ -25,7 +25,7 @@ from tkinter import messagebox
 from matplotlib import pyplot as plt
 
 #Author(s): Kyle Sargent, Erica Gitlin, Connor Jansen, Colton Eddy, Alex Wilson, Emily Box
-#Version: 3
+#Version: 1
 
 
 thrLock = thr.Lock()
@@ -47,39 +47,40 @@ def writeToExcel(value, workbookName, sheet, date):
     startCol, startRow = 1, 1
     dateCol, dateRow = 0, 0
 
+    if date not in ws.values:
+        if ws.cell(startRow,startCol).value == None:
+            dateCell = ws.cell(row = startRow, column = startCol, value = date)
+            dateCell.alignment = openpyxl.styles.Alignment(horizontal = 'center', vertical = 'center')
+            dateCol = startCol
+            dateRow = startRow
+            ws.merge_cells(dateCell.coordinate + ':' + ws.cell(dateRow, dateCol + 3).coordinate)
+            wb.save(workbookName)
 
-    if ws.cell(startRow,startCol).value == None:
-        dateCell = ws.cell(row = startRow, column = startCol, value = date)
-        dateCell.alignment = openpyxl.styles.Alignment(horizontal = 'center', vertical = 'center')
-        dateCol = startCol
-        dateRow = startRow
-        ws.merge_cells(dateCell.coordinate + ':' + ws.cell(dateRow, dateCol + 3).coordinate)
-    else:
-        for i in range(startCol, 25, 10):
-            if ws.cell(row = startRow, column = i).value != None:
-                continue
-            else: 
-                dateCell = ws.cell(row = startRow, column = i, value = date)
-                dateCell.alignment = openpyxl.styles.Alignment(horizontal = 'center', vertical = 'center')
-                dateCol = i
-                dateRow = startRow
-                ws.merge_cells(dateCell.coordinate + ':' + ws.cell(dateRow, dateCol + 3).coordinate)
-                break
+        else:
+            for i in range(startCol, 25, 10):
+                if ws.cell(row = startRow, column = i).value != None:
+                    continue
+                else: 
+                    dateCell = ws.cell(row = startRow, column = i, value = date)
+                    dateCell.alignment = openpyxl.styles.Alignment(horizontal = 'center', vertical = 'center')
+                    dateCol = i
+                    dateRow = startRow
+                    ws.merge_cells(dateCell.coordinate + ':' + ws.cell(dateRow, dateCol + 3).coordinate)
+                    wb.save(workbookName)
+                    break
 
-    ratioRow = dateRow + 1
-    ratioCol = dateCol + 1
+        ratioRow = dateRow + 1
+        ratioCol = dateCol + 1
 
-    for i in range(ratioRow, 27): #limit to 25 runs for now
-        for j in range(ratioCol,27): #limit to 25 runs for now
-            if ws.cell(ratioRow , ratioCol).value != None:
-                continue
-            else:
-                ratioCell = ws.cell(ratioRow , ratioCol, value = str(value) + "%")
-                ratioCell.number_format = "0.00%"
-                wb.save(workbookName)
-                return
-
-
+        for i in range(ratioRow, 27): #limit to 25 runs for now
+            for j in range(ratioCol,27): #limit to 25 runs for now
+                if ws.cell(ratioRow , ratioCol).value != None:
+                    continue
+                else:
+                    ratioCell = ws.cell(ratioRow , ratioCol, value = str(value) + "%")
+                    ratioCell.number_format = "0.00%"
+                    wb.save(workbookName)
+                    return
     wb.save(workbookName)
     return
 
@@ -324,7 +325,7 @@ def main():
     root = tk.Tk()
     #the size of the window
     root.geometry('350x300')
-    root.title("LDA GUI v3.0")
+    root.title("LDA GUI v1.0")
     gui = GUI.analyzerGUI(root) #create new instance of the analyzerGUI with root as master.
 
     trays, pics, threads = [], [], []
@@ -440,7 +441,7 @@ def main():
                 for tray in trays:
                     ws = wb.create_sheet("tray " + str(tray))
                 
-                file = asksaveasfilename(initialdir = ".",title = "Save As",filetypes = (("xlsx","*.xlsx"),("All Files","*.*"))) + ".xlsx" #creates new workbook (currently creates a single placeholder book in the current directory
+                file = asksaveasfilename(initialdir = ".",title = "Save As",filetypes = (("xlsx","*.xlsx"),("All Files","*.*"))) + ".xlsx" #creates new workbook (currently creates a single placeholder book in the current directory               
                 wb.save(file)
                 return file
 
@@ -477,7 +478,10 @@ def main():
             trays = getNumbers(trayStr)
             pics = getNumbers(picStr)
             workbook = newOrExisting(trays)
-            print(workbook)
+
+            if workbook == ".xlsx": #saving the workbook filename is cancelled, file will become ".xlsx" and still create a spreadsheet and run the analyzing. This will prevent that.
+                os.remove(workbook) 
+                return messagebox.showwarning("No Save/Existing Spreadsheet Name Warning!", "No name has been selected for the spreadsheet you wish to use. Please retry.")
 
             numTrays = len(trays)
             numPics = len(pics)
@@ -485,9 +489,7 @@ def main():
             if numPics * numTrays > 8:
                 return messagebox.showwarning("Input Warning!", "Current inputs from Tray/Picture entry fields will spawn too many threads. Use the following as a guide for entering data into tray/pictures entry fields: trays * pictures <= 8.")
             
-            if workbook == "":
-                return messagebox.showwarning("No Save/Existing Spreadsheet Name Warning!", "No name has been selected for the spreadsheet you wish to use. Please retry.")
-    
+        
             for i in range(len(trays)):
                 for j in range(len(pics)): 
                     t = thr.Thread(target = threadHandler, args = [dateStr, trays[i], pics[j], workbook])
@@ -499,10 +501,10 @@ def main():
  
         return
                 
-    uploadBtn = tk.Button(root, text= "Analyze", command=sendToAnalyzer, height = 1, width = 5)
+    uploadBtn = tk.Button(root, text= "Analyze", command=sendToAnalyzer, height = 1, width = 10)
     uploadBtn.grid(row= 5, column = 0)    
     calendarBtn = tk.Button(root, text="Pick a Date", command=date)
-    calendarBtn.grid(row = 5, column = 1)
+    calendarBtn.grid(row = 3, column = 1, pady = (0,60))
 
     root.mainloop()
 
