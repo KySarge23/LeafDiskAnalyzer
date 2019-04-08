@@ -46,10 +46,10 @@ class DatePicker(tk.Toplevel):
         self.frame_days.pack()
 
     def init_needed_vars(self):
-        self.month_names = tuple(calendar.month_name)
+        self.month_names = ["","01","02","03","04","05","06","07","08","09","10","11","12"]
         self.day_names = tuple(calendar.day_abbr)
         self.year = time.strftime("%Y")
-        self.month = time.strftime("%B")
+        self.month = time.strftime("%m")
 
     def init_month_year_labels(self):
         self.year_str_var = tk.StringVar()
@@ -144,7 +144,7 @@ class DatePicker(tk.Toplevel):
             pass
 
         year = int(self.year_str_var.get())
-        month = self.month_names.index(self.month_str_var.get())
+        month = int(self.month_str_var.get())
         self.m_cal = calendar.monthcalendar(year, month)
 
         #  build dates buttons.
@@ -203,12 +203,12 @@ class DatePicker(tk.Toplevel):
 
         clicked_button = clicked.widget
         year = self.year_str_var.get()
-        month = self.month_str_var.get()
+        month = int(self.month_str_var.get())
         date = clicked_button['text']
 
         self.full_date = self.str_format % (month, date, year)
-        print(self.full_date)
         #  Replace with parent 'widget' of your choice.
+        print(self.full_date)
         try:
             self.widget.delete(0, tk.END)
             self.widget.insert(0, self.full_date)
