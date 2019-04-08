@@ -34,10 +34,10 @@ def writeToExcel(value, workbookName, sheet, date):
 
     """
     This function will handle any writing to the spreadsheet document that is required.
-    It will take
+    It uses openpyxl to load in a workbook and write the data obtained from the analysis to spreadsheets in selected workbooks.
 
-    Input(s): 
-    Output(s): 
+    Input(s): value, workbookName, sheet, data
+    Output(s): Data written to sheet in workbook
     Local Variable(s):  wb (excel workbook that is opened), ws (worksheet from opened workbook), startCol/startRow (int), 
     
     """
@@ -205,7 +205,9 @@ def threadHandler(date, trayNum, picNum, spreadsheet):
     """
     This Function accepts the three user inputs from the main function/GUI as arguments.
     It then builds a valid filepath based on the arguments. Once a valid path is created,
-    this function sends that path to the findCircleArea and cannyEdgeDetection functions.
+    this function sends that path to the findCircleArea and cannyEdgeDetection functions. 
+    This function validates the file extension of the file selected to make sure that the selection is a valid image format.
+    Supported file extensions: .png, .jpeg, .jpg, .tiff, .tif
 
     Input(s): date (String) , tray (int), picNum (int)
     Output(s): None
@@ -239,6 +241,14 @@ def threadHandler(date, trayNum, picNum, spreadsheet):
             thrLock.release()
             return print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
 
+    elif os.path.exists(path + ".jpg"): #validate the path
+            path = path + ".jpg"
+            mildewRatio = calculateMildew(path)
+            thrLock.acquire()
+            writeToExcel(mildewRatio, spreadsheet, tray, date[10:])
+            thrLock.release()
+            return print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+   
     elif os.path.exists(path + ".tiff"): #validate the path
             path = path + ".tiff"
             mildewRatio = calculateMildew(path)
@@ -378,12 +388,12 @@ def main():
     def validateDate(date):
         """
         Function to validate the date input by the user. We check if date is less than 6 because it allows for folders to be structured 
-        as d-m-yy as well. Otherwise we check for digits and the '-' character if anything else is found, 
+        as dd-mm-yy as well. Otherwise we check for digits and the '-' character if anything else is found, 
         then we warn the user about the found character and then clear the entry field for retrying.
         
         Input(s): date (String)
-        Output(s): boolen if count found == len of date 
-        Local Varaible(s): count (int) , dashes (list of indicies), numCount (int)
+        Output(s): boolean if count found == len of date 
+        Local Variable(s): count (int) , dashes (list of indicies), numCount (int)
 
         """
 
