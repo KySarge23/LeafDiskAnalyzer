@@ -21,7 +21,6 @@ class analyzerGUI:
                            trayLabel/picLabel/dateLabel (Label), trayEntry/picEntry/dateEntry (Entry)
                            
         """
-
         #a blank canvas for our GUI
         self.c = Canvas(master, height=300, width=300)
         self.menu = Menu(master) 
@@ -34,6 +33,14 @@ class analyzerGUI:
 
         def showCopyright():
             messagebox.showinfo(title="Copyright", message = "This is the copyright")
+
+
+        def on_exit():
+            """When you click to exit, this function is called"""
+            if messagebox.askyesnocancel("Exit", "Are you sure you want to close this application?"):
+                master.destroy()
+
+        master.protocol("WM_DELETE_WINDOW", on_exit)
 
         self.menu.add_cascade(label='About', menu=self.helpmenu) 
         self.helpmenu.add_command(label='About LDA', command= showAbout)
@@ -77,7 +84,7 @@ class analyzerGUI:
 
         self.dateLabel= Label(master, text="Date:")
         self.dateLabel.grid(row = 3, column= 0, pady=(0,60))
-        # self.dateEntry = Entry(master)
-        # self.dateEntry.insert(0,"Date: 'mm-dd-yy'")
-        # self.dateEntry.grid(row = 3, column = 1, pady  = (0,60))
-        # self.dateEntry.bind("<Button-1>", clearDateEntry)
+        self.dateEntry = Entry(master)
+        self.dateEntry.insert(0,"Date: 'mm-dd-yy'")
+        self.dateEntry.grid(row = 3, column = 1, pady  = (0,60))
+        self.dateEntry.bind("<Button-1>", clearDateEntry)

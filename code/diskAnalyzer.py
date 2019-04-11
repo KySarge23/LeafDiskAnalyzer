@@ -364,6 +364,12 @@ def main():
     #the size of the window
     root.geometry('350x300')
     root.title("LDA GUI v1.0")
+
+    def exitWindow(e):
+        if messagebox.askyesnocancel("Exit","Are you sure you want to close this application?"):
+            root.destroy()
+
+    root.bind("<Escape>", exitWindow)
     gui = GUI.analyzerGUI(root) #create new instance of the analyzerGUI with root as master.
 
     trays, pics, threads = [], [], []
