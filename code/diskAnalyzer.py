@@ -30,13 +30,13 @@ from matplotlib import pyplot as plt
 
 thrLock = thr.Lock()
 
-def writeToExcel(value, workbookName, sheet, date):
+def writeToExcel(value, workbookName, sheet, date, picNum):
 
     """
     This function will handle any writing to the spreadsheet document that is required.
     It uses openpyxl to load in a workbook and write the data obtained from the analysis to spreadsheets in selected workbooks.
 
-    Input(s): value, workbookName, sheet, data
+    Input(s): value (int), workbookName (string), sheet (string), date (string), picNum (int)
     Output(s): Data written to sheet in workbook
     Local Variable(s):  wb (excel workbook that is opened), ws (worksheet from opened workbook), startCol/startRow (int), 
     
@@ -46,10 +46,35 @@ def writeToExcel(value, workbookName, sheet, date):
     ws = wb[sheet]
     startCol, startRow = 1, 1
     dateCol, dateRow = 0, 0
+    foundDate = False
+    pic = "Picture " + str(picNum)
+        
 
-    if date not in ws.values:
+    for cell in ws[1]:
+        if cell.value == date:
+            dateCol = cell.column
+            dateRow = cell.row
+            foundDate = True
+            break
+    
+    if foundDate == True:
+        ratioRow = dateRow + 1
+        ratioCol = dateCol + 1
+
+        for i in range(ratioRow, 27): #limit to 25 runs for now
+            for j in range(ratioCol,27): #limit to 25 runs for now
+                if ws.cell(i, j).value != None:
+                    continue
+                else:
+                    ratioCell = ws.cell(i , j, value = pic + ": "+ str(value))
+                    # ratioCell = ws.cell(i, j, value = value)
+                    # ratioCell.number_format = "0.00%"
+                    wb.save(workbookName)
+                    return
+
+    elif foundDate == False:
         if ws.cell(startRow,startCol).value == None:
-            dateCell = ws.cell(row = startRow, column = startCol, value = date)
+            dateCell = ws.cell(startRow, startCol, value = date)
             dateCell.alignment = openpyxl.styles.Alignment(horizontal = 'center', vertical = 'center')
             dateCol = startCol
             dateRow = startRow
@@ -58,10 +83,9 @@ def writeToExcel(value, workbookName, sheet, date):
 
         else:
             for i in range(startCol, 25, 10):
-                if ws.cell(row = startRow, column = i).value != None:
-                    continue
+                if ws.cell(row = startRow, column = i).value != None: continue
                 else: 
-                    dateCell = ws.cell(row = startRow, column = i, value = date)
+                    dateCell = ws.cell(startRow, i, value = date)
                     dateCell.alignment = openpyxl.styles.Alignment(horizontal = 'center', vertical = 'center')
                     dateCol = i
                     dateRow = startRow
@@ -74,13 +98,17 @@ def writeToExcel(value, workbookName, sheet, date):
 
         for i in range(ratioRow, 27): #limit to 25 runs for now
             for j in range(ratioCol,27): #limit to 25 runs for now
-                if ws.cell(ratioRow , ratioCol).value != None:
-                    continue
+                if ws.cell(i, j).value != None: continue
                 else:
-                    ratioCell = ws.cell(ratioRow , ratioCol, value = str(value) + "%")
-                    ratioCell.number_format = "0.00%"
+                    # picCell = ws.cell(ratioRow, ratioCol-1, value = "Picture "+ str(picNum))
+                    ratioCell = ws.cell(i , j, value = pic + ": "+ str(value))
+                    # ratioCell = ws.cell(i, j, value = value)
+                    # ratioCell.number_format = "0.00%"
                     wb.save(workbookName)
                     return
+
+
+
     wb.save(workbookName)
     return
 
@@ -229,7 +257,7 @@ def threadHandler(date, trayNum, picNum, spreadsheet):
             path = path + ".png"
             mildewRatio = calculateMildew(path)
             thrLock.acquire()
-            writeToEx   cel(mildewRatio, spreadsheet, tray, date[10:])
+            writeToExcel(mildewRatio, spreadsheet, tray, date[10:])
             thrLock.release()
             return print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
 
@@ -261,7 +289,7 @@ def threadHandler(date, trayNum, picNum, spreadsheet):
             path = path + ".tif"
             mildewRatio = calculateMildew(path)
             thrLock.acquire()
-            writeToExcel(mildewRatio, spreadsheet, tray, date[10:])
+            writeToExcel(mildewRatio, spreadsheet, tray, date[10:],picNum)
             thrLock.release()
             return print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
             
@@ -513,8 +541,8 @@ def main():
                 
     uploadBtn = tk.Button(root, text= "Analyze", command=sendToAnalyzer, height = 1, width = 10)
     uploadBtn.grid(row= 5, column = 0)    
-    calendarBtn = tk.Button(root, text="Pick a Date", command=date)
-    calendarBtn.grid(row = 3, column = 1, pady = (0,60))
+    # calendarBtn = tk.Button(root, text="Pick a Date", command=date)
+    # calendarBtn.grid(row = 3, column = 1, pady = (0,60))
 
     root.mainloop()
 
