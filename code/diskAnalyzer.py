@@ -1,28 +1,34 @@
-#!/usr/bin/env python3
+ #!/usr/bin/env python3
 
-#Imports for functionalities
+#Imports that dont need to be installed via pip
 import math
-import cv2 as cv
-import numpy as np
-import matplotlib.image as mpimg
 import tkinter as tk
 import os
 import threading as thr
-import time
-import imghdr
-import sys
 import glob
-import openpyxl, openpyxl.styles
+
+#--------------------------------------------#
+
+#Imports that need to be installed via pip:
+import cv2 as cv #opencv-python
+import openpyxl, openpyxl.styles #openpyxl
+import numpy as np #numpy  
+
+#--------------------------------------------#
 
 #GUI Imports
 import GUI
 import calendarPicker as cp
 
+#--------------------------------------------#
+
 #Specific functionality imports
 from pathlib import Path as pth
 from tkinter.filedialog import askopenfilename, asksaveasfilename
 from tkinter import messagebox
-from matplotlib import pyplot as plt
+
+#--------------------------------------------#
+
 
 #Author(s): Kyle Sargent, Erica Gitlin, Connor Jansen, Colton Eddy, Alex Wilson, Emily Box
 #Version: 1
@@ -173,15 +179,10 @@ def calculateMildew(path):
     rad = 200
     cv.circle(cimg, center, rad, (0,0,255), 2)
 
-
     area = math.pi * rad ** 2 #calculate the area of the circle detected in pixels
     # print("Area of circle drawn is: " + str(int(area))+"px\n")
 
-    # cimg = cimg[0:h, 30:w-30]
-    # cv.imshow(x ,cimg)
-    # cv.waitKey(0)
-    # cv.destroyAllWindows()
-    # cv.imwrite("crop.png" , cimg)
+    img = img[0:h, 10:w-10]
 
     print("Edge Detection Starting")
 
@@ -206,12 +207,19 @@ def calculateMildew(path):
     #Save image into photos folder for now. so can be used in analyzeDisks method
     print("Edge Detection Complete")
 
+    #Uncomment the following lines to view the edge detected photos
+    # cv.imshow("edges", edges)
+    # cv.waitKey(0)
+    # cv.destroyAllWindows()
+
+
     #we now set a threshold using cv.threshhold. This will help to detect possible
     #contours that are greater than the value (127,255,0), a color which was detected
     #on the leaf that is dark green. This is the baseline color. Essentially this is
     #the normal color of the image.
     ret, edges = cv.threshold(edges,130,255,cv.ADAPTIVE_THRESH_MEAN_C)
     mask = np.zeros(edges.shape,np.uint8)
+
     #we must now find the contours. We apply the findContours using our threshold value.
     #we want the contours as a list not as a tree. The next parameter is extremely important
     #this is the method of approximating the contours. The Chain Approximation finds contours
@@ -355,8 +363,7 @@ def getNumbers(input):
         nums.append(n1)
         return nums
         
-def date():
-    cp.DatePicker(format_str='%01d-%02d-%s')
+
 
 def main():
     
@@ -374,8 +381,6 @@ def main():
 
     trays, pics, threads = [], [], []
     workbook = ""
-
-    # following lines uncomment if want to use calendarPicker.py 
 
     def validateTP(x,y):
         """
@@ -447,10 +452,14 @@ def main():
             s1 = s1.split('-')
             s2 = s2.split('-')
 
-            for str in s1 and s2:
+            for str in s1:
                 if len(str) > 2:
                     messagebox.showwarning("Incorrect Date Warning!", "An incorrect date of: "+ date +" has been found. Please enter a date in the following format: 'mm-dd-yy'.")
-                    gui.dateEntry.delete(0, tk.END)
+                    return False
+            
+            for str in s2:
+                if len(str) > 2:
+                    messagebox.showwarning("Incorrect Date Warning!", "An incorrect date of: "+ date +" has been found. Please enter a date in the following format: 'mm-dd-yy'.")
                     return False
 
             count = 0
@@ -513,17 +522,24 @@ def main():
         Local Varaible(s): None
 
         """
+        gui.calendarBtn.config(state = 'disabled')
+        gui.trayEntry.config(state = 'disabled')
+        gui.picEntry.config(state = 'disabled')
 
         trayStr = gui.trayEntry.get().rstrip().lstrip()
         picStr = gui.picEntry.get().rstrip().lstrip()
-        dateStr = gui.dateEntry.get().rstrip().lstrip()
+        dateStr = cp.gets() #gui.dateEntry.get().rstrip().lstrip()
 
+        # uncomment out the following lines for testing date capturing.
+        # print(dateStr)
+        # print(len(dateStr))
+        
         if validateTP(trayStr, picStr) and validateDate(dateStr):
             trays = getNumbers(trayStr)
             pics = getNumbers(picStr)
             workbook = newOrExisting(trays)
 
-            if workbook == ".xlsx": #saving the workbook filename is cancelled, file will become ".xlsx" and still create a spreadsheet and run the analyzing. This will prevent that.
+            if workbook == ".xlsx": #if saving the workbook filename is cancelled, file will become ".xlsx" and still create a spreadsheet and run the analyzing. This will prevent that.
                 os.remove(workbook) 
                 return messagebox.showwarning("No Save/Existing Spreadsheet Name Warning!", "No name has been selected for the spreadsheet you wish to use. Please retry.")
 
@@ -542,17 +558,19 @@ def main():
             
             for  t in threads:
                 t.join()
- 
+
+
+        gui.calendarBtn.config(state = 'normal')
+        gui.trayEntry.config(state = 'normal')
+        gui.picEntry.config(state = 'normal')
+
         return
                 
     uploadBtn = tk.Button(root, text= "Analyze", command=sendToAnalyzer, height = 1, width = 10)
     uploadBtn.grid(row= 5, column = 0)    
-    # calendarBtn = tk.Button(root, text="Pick a Date", command=date)
-    # calendarBtn.grid(row = 3, column = 1, pady = (0,60))
+
 
     root.mainloop()
-
-
 
 
 main()

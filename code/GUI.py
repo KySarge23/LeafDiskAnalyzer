@@ -5,8 +5,13 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
 
+import calendarPicker as cp
+
 
 #Author(s): Erica Gitlin, Colton Eddy, Kyle Sargent, Emily Box
+
+def date():
+    cp.DatePicker(format_str="%01d-%02d-%02d")
 
 class analyzerGUI:
     def __init__(self, master):
@@ -36,7 +41,6 @@ class analyzerGUI:
 
 
         def on_exit():
-            """When you click to exit, this function is called"""
             if messagebox.askyesnocancel("Exit", "Are you sure you want to close this application?"):
                 master.destroy()
 
@@ -84,7 +88,5 @@ class analyzerGUI:
 
         self.dateLabel= Label(master, text="Date:")
         self.dateLabel.grid(row = 3, column= 0, pady=(0,60))
-        self.dateEntry = Entry(master)
-        self.dateEntry.insert(0,"Date: 'mm-dd-yy'")
-        self.dateEntry.grid(row = 3, column = 1, pady  = (0,60))
-        self.dateEntry.bind("<Button-1>", clearDateEntry)
+        self.calendarBtn = tk.Button(master, text="Pick a Date", command=date)
+        self.calendarBtn.grid(row = 3, column = 1, pady = (0,60))

@@ -1,8 +1,22 @@
+# !/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Author: Rambarun Komaljeet
+# License: Freeware
+# Edited by: Kyle Sargent
+# ---------------------------------------------------------------------------
+
 import calendar
 import tkinter as tk
 import time
 from tkinter import ttk
+from builtins import print
 
+full_date = None
+
+def sets(string):
+    global full_date
+    full_date = string
+    return
 
 class DatePicker(tk.Toplevel):
     """
@@ -37,7 +51,7 @@ class DatePicker(tk.Toplevel):
         self.space_between_widgets()
         self.fill_days()
         self.make_calendar()
-
+        
     def init_frames(self):
         self.frame1 = tk.Frame(self)
         self.frame1.pack()
@@ -192,7 +206,7 @@ class DatePicker(tk.Toplevel):
             "self.btn_" + str(date) + ".destroy()"
         )
 
-    def get_date(self, clicked=None):
+    def get_date(self, clicked):
         """
         Description:
             Get the date from the calendar on button click.
@@ -202,29 +216,23 @@ class DatePicker(tk.Toplevel):
         """
 
         clicked_button = clicked.widget
-        year = self.year_str_var.get()
+        year = int(self.year_str_var.get()[2:])
         month = int(self.month_str_var.get())
         date = clicked_button['text']
 
-        self.full_date = self.str_format % (month, date, year)
+        self.date = self.str_format % (month, date, year)
         #  Replace with parent 'widget' of your choice.
-        print(self.full_date)
+        sets(self.date) #set global variable of full_date
+
         try:
             self.widget.delete(0, tk.END)
-            self.widget.insert(0, self.full_date)
+            self.widget.insert(0, self.date)
         except AttributeError:
             pass
         return
+  
+
+def gets():
+    return full_date
 
 
-# root = tk.Tk()
-
-# def app():
-#     DatePicker(format_str="%s-%02d-%s")
-
-# date = tk.Entry(root)
-# date.grid(row= 0, column = 0)
-# btn = tk.Button(root, text="date", command= app)
-# btn.grid(row = 0, column = 1)
-
-# root.mainloop()
