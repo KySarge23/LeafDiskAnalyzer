@@ -33,6 +33,7 @@ from tkinter import messagebox
 #Author(s): Kyle Sargent, Erica Gitlin, Connor Jansen, Colton Eddy, Alex Wilson, Emily Box
 #Version: 1
 
+datePicked = ""
 
 thrLock = thr.Lock()
 
@@ -364,6 +365,9 @@ def getNumbers(input):
         return nums
         
 
+def date():
+    cp.DatePicker(format_str="%01d-%02d-%02d")
+
 
 def main():
     
@@ -381,6 +385,8 @@ def main():
 
     trays, pics, threads = [], [], []
     workbook = ""
+
+
 
     def validateTP(x,y):
         """
@@ -522,19 +528,19 @@ def main():
         Local Varaible(s): None
 
         """
-        gui.calendarBtn.config(state = 'disabled')
         gui.trayEntry.config(state = 'disabled')
         gui.picEntry.config(state = 'disabled')
 
         trayStr = gui.trayEntry.get().rstrip().lstrip()
         picStr = gui.picEntry.get().rstrip().lstrip()
-        dateStr = cp.gets() #gui.dateEntry.get().rstrip().lstrip()
+        dateStr = cp.get().rstrip().lstrip()
 
         # uncomment out the following lines for testing date capturing.
-        # print(dateStr)
+        print(dateStr)
+        # print(type(dateStr))
         # print(len(dateStr))
         
-        if validateTP(trayStr, picStr) and validateDate(dateStr):
+        if validateTP(trayStr, picStr):
             trays = getNumbers(trayStr)
             pics = getNumbers(picStr)
             workbook = newOrExisting(trays)
@@ -560,7 +566,6 @@ def main():
                 t.join()
 
 
-        gui.calendarBtn.config(state = 'normal')
         gui.trayEntry.config(state = 'normal')
         gui.picEntry.config(state = 'normal')
 
@@ -568,6 +573,9 @@ def main():
                 
     uploadBtn = tk.Button(root, text= "Analyze", command=sendToAnalyzer, height = 1, width = 10)
     uploadBtn.grid(row= 5, column = 0)    
+
+    calendarBtn = tk.Button(root, text="Pick a Date", command=date)
+    calendarBtn.grid(row = 3, column = 1, pady = (0,60))
 
 
     root.mainloop()

@@ -9,7 +9,6 @@ import calendar
 import tkinter as tk
 import time
 from tkinter import ttk
-from builtins import print
 
 full_date = None
 
@@ -232,7 +231,7 @@ class DatePicker(tk.Toplevel):
         return
   
 
-def gets():
+def get():
     return full_date
 
 

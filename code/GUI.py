@@ -5,13 +5,8 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
 
-import calendarPicker as cp
-
 
 #Author(s): Erica Gitlin, Colton Eddy, Kyle Sargent, Emily Box
-
-def date():
-    cp.DatePicker(format_str="%01d-%02d-%02d")
 
 class analyzerGUI:
     def __init__(self, master):
@@ -88,5 +83,3 @@ class analyzerGUI:
 
         self.dateLabel= Label(master, text="Date:")
         self.dateLabel.grid(row = 3, column= 0, pady=(0,60))
-        self.calendarBtn = tk.Button(master, text="Pick a Date", command=date)
-        self.calendarBtn.grid(row = 3, column = 1, pady = (0,60))
