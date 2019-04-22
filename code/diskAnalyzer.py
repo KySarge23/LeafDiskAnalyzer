@@ -198,7 +198,6 @@ def calculateMildew(path):
     #Reading of the same photo, in color for displaying and grayscale for edgeDetection.
     #imgC = cv.imread(x,1)
 
-
     #cv.imshow('Original', img)
 
     #Converting img to RGB:
@@ -264,57 +263,56 @@ def threadHandler(date, trayNum, picNum, spreadsheet):
     fName = str(picNum) + "-160x271_" + str(picNum)
 
 
-
     path = os.path.abspath(dirName + fName)
 
     if os.path.exists(path + ".png"): #validate the path
             path = path + ".png"
             mildewRatio = calculateMildew(path)
-            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
             thrLock.acquire()
             writeToExcel(mildewRatio, spreadsheet, tray, date[10:])
-            thrLock.release()
             print(thr.current_thread().getName() +" returning")
+            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+            thrLock.release()
             return 
 
     elif os.path.exists(path + ".jpeg"): #validate the path
-            path = path + ".jpeg"
             mildewRatio = calculateMildew(path)
-            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+            path = path + ".jpeg"
             thrLock.acquire()
             writeToExcel(mildewRatio, spreadsheet, tray, date[10:])
-            thrLock.release()
             print(thr.current_thread().getName() +" returning")
+            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+            thrLock.release()
             return
 
     elif os.path.exists(path + ".jpg"): #validate the path
             path = path + ".jpg"
             mildewRatio = calculateMildew(path)
-            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
             thrLock.acquire()
             writeToExcel(mildewRatio, spreadsheet, tray, date[10:])
-            thrLock.release()
             print(thr.current_thread().getName() +" returning")
+            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+            thrLock.release()
             return 
 
     elif os.path.exists(path + ".tiff"): #validate the path
             path = path + ".tiff"
             mildewRatio = calculateMildew(path)
-            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
             thrLock.acquire()
             writeToExcel(mildewRatio, spreadsheet, tray, date[10:])
-            thrLock.release()
             print(thr.current_thread().getName() +" returning")
+            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+            thrLock.release()
             return
 
     elif os.path.exists(path + ".tif"): #validate the path
             path = path + ".tif"
             mildewRatio = calculateMildew(path)
-            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
             thrLock.acquire()
             writeToExcel(mildewRatio, spreadsheet, tray, date[10:],picNum)
-            thrLock.release()
             print(thr.current_thread().getName() + " returning")
+            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+            thrLock.release()
             return 
             
     else: #let user know the software has detected an invalid path
@@ -446,9 +444,8 @@ def main():
                 for tray in trays:
                     if "tray " + str(tray) not in wsheets:
                         ws = wb.create_sheet("tray " + str(tray))
-
-                wb.save(file)
-                return file
+                        wb.save(file)
+                        return file
 
     def validateTP(x,y):
         """
@@ -540,7 +537,13 @@ def main():
         if validateTP(trayStr, picStr) and validateDate(date):
             trays = getNumbers(trayStr)
             pics = getNumbers(picStr)
-            workbook = newOrExisting(trays)
+            try:
+                workbook = newOrExisting(trays)
+            except:
+                gui.trayEntry.config(state = 'normal')
+                gui.picEntry.config(state = 'normal')
+                gui.calendarBtn.config(state = 'normal')
+                return messagebox.showerror("Selection Cancelled!", "Selection of existing sheet cancelled. Please retry again.")    
 
             if workbook == ".xlsx": #if saving the workbook filename is cancelled, file will become ".xlsx" and still create a spreadsheet and run the analyzing. This will prevent that.
                 os.remove(workbook) 
