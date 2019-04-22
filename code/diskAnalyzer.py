@@ -6,6 +6,7 @@ import tkinter as tk
 import os
 import threading as thr
 import glob
+import time
 
 #--------------------------------------------#
 
@@ -33,13 +34,12 @@ from tkinter import messagebox
 #Author(s): Kyle Sargent, Erica Gitlin, Connor Jansen, Colton Eddy, Alex Wilson, Emily Box
 #Version: 1
 
-datePicked = ""
 
 thrLock = thr.Lock()
 
 def writeToExcel(value, workbookName, sheet, date, picNum):
-
     """
+
     This function will handle any writing to the spreadsheet document that is required.
     It uses openpyxl to load in a workbook and write the data obtained from the analysis to spreadsheets in selected workbooks.
 
@@ -120,17 +120,20 @@ def writeToExcel(value, workbookName, sheet, date, picNum):
     return
 
 
-
-
 def calculateMildew(path):
-
-    """Area finding function, Will utilize HoughCircle method to detect circles
-       within the photo or hard coded method to detect circles . Then will use that circle to find the area within it which
-       is what will be used later in the edge detection"""
+    """
+    
+    Area finding function, Will utilize HoughCircle method to detect circles
+    within the photo or hard coded method to detect circles . Then will use that circle to find the area within it which
+    is what will be used later in the edge detection
+    
+    """
 
     img = cv.imread(path,0) #read in as Grayscale
     img = cv.resize(img,(423,280)) #resize image, for easier reading and faster execution.
+   
     img = cv.medianBlur(img,5) #add blur to reduce noise on photo.
+   
     cimg = cv.cvtColor(img,cv.COLOR_GRAY2BGR) #convert back to BGR scale for the drawn circle to show up as whatever color specified.
     """The following lines can be used to have an algorithm detect circles for us.
        or can use the hard-coded version that is commented out below"""
@@ -146,9 +149,9 @@ def calculateMildew(path):
            Initially each cell is set to 0.
         2. For each edge point (i, j) in the image, increment all cells which according to the equation of a circle (i-a)^{2}+(j-b)^{2}=r^{2}
            could be the center of a circle. 
-           These cells are represented by th    e letter a in the equation.
-        3. For each possible value of  a fou    nd in the previous step, find all possible values of b which satisfy the equation.
-        4. Search for local maxima in the ac    cumulator space. These cells represent circles that were detected by the algorithm.
+           These cells are represented by the letter a in the equation.
+        3. For each possible value of  a found in the previous step, find all possible values of b which satisfy the equation.
+        4. Search for local maxima in the accumulator space. These cells represent circles that were detected by the algorithm.
 
         If we do not know the radius of the circle we are trying to locate beforehand,
         we can use a three-dimensional accumulator space to search for circles with an arbitrary radius.
@@ -172,8 +175,8 @@ def calculateMildew(path):
        or can use above to use an algorithm to detect the circle"""
 
     h,w = img.shape[:2]
-    print("height is: " + str(h))
-    print("width is: " + str(w))
+    # print("height is: " + str(h))
+    # print("width is: " + str(w))
 
 
     center = (int(w / 2), int(h / 2))
@@ -185,7 +188,7 @@ def calculateMildew(path):
 
     img = img[0:h, 10:w-10]
 
-    print("Edge Detection Starting")
+    # print("Edge Detection Starting")
 
     #second param: (1= color, 0= grayscale, -1 = unchanged)
     #however OCV uses BGR coloring and Matplot uses RGB coloring, so
@@ -206,7 +209,7 @@ def calculateMildew(path):
     #for more details.
     edges = cv.Canny(img,120,200)
     #Save image into photos folder for now. so can be used in analyzeDisks method
-    print("Edge Detection Complete")
+    # print("Edge Detection Complete")
 
     #Uncomment the following lines to view the edge detected photos
     # cv.imshow("edges", edges)
@@ -240,6 +243,7 @@ def calculateMildew(path):
 
 def threadHandler(date, trayNum, picNum, spreadsheet):
     """
+    
     This Function accepts the three user inputs from the main function/GUI as arguments.
     It then builds a valid filepath based on the arguments. Once a valid path is created,
     this function sends that path to the findCircleArea and cannyEdgeDetection functions. 
@@ -251,13 +255,14 @@ def threadHandler(date, trayNum, picNum, spreadsheet):
     Local Variable(s): path (String), dirName (String) , fName (String), circArea (int), mildewRatio (int), mildewRatio (int)
 
     """
+
     print(thr.current_thread())
-
-
+    
     date = glob.glob("../photos/"+ date + "*", recursive=True)[0]
     tray = 'tray '+ str(trayNum)
     dirName = date + "/" + tray + "/"
     fName = str(picNum) + "-160x271_" + str(picNum)
+
 
 
     path = os.path.abspath(dirName + fName)
@@ -265,49 +270,61 @@ def threadHandler(date, trayNum, picNum, spreadsheet):
     if os.path.exists(path + ".png"): #validate the path
             path = path + ".png"
             mildewRatio = calculateMildew(path)
+            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
             thrLock.acquire()
             writeToExcel(mildewRatio, spreadsheet, tray, date[10:])
             thrLock.release()
-            return print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+            print(thr.current_thread().getName() +" returning")
+            return 
 
     elif os.path.exists(path + ".jpeg"): #validate the path
             path = path + ".jpeg"
             mildewRatio = calculateMildew(path)
+            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
             thrLock.acquire()
             writeToExcel(mildewRatio, spreadsheet, tray, date[10:])
             thrLock.release()
-            return print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+            print(thr.current_thread().getName() +" returning")
+            return
 
     elif os.path.exists(path + ".jpg"): #validate the path
             path = path + ".jpg"
             mildewRatio = calculateMildew(path)
+            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
             thrLock.acquire()
             writeToExcel(mildewRatio, spreadsheet, tray, date[10:])
             thrLock.release()
-            return print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
-   
+            print(thr.current_thread().getName() +" returning")
+            return 
+
     elif os.path.exists(path + ".tiff"): #validate the path
             path = path + ".tiff"
             mildewRatio = calculateMildew(path)
+            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
             thrLock.acquire()
             writeToExcel(mildewRatio, spreadsheet, tray, date[10:])
             thrLock.release()
-            return print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+            print(thr.current_thread().getName() +" returning")
+            return
 
     elif os.path.exists(path + ".tif"): #validate the path
             path = path + ".tif"
             mildewRatio = calculateMildew(path)
+            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
             thrLock.acquire()
             writeToExcel(mildewRatio, spreadsheet, tray, date[10:],picNum)
             thrLock.release()
-            return print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+            print(thr.current_thread().getName() + " returning")
+            return 
             
     else: #let user know the software has detected an invalid path
             print("Invalid path detected, No file or directory resides in: \n" + path)
+            return
 
 
 def findOccurrences(s, ch):
     """
+    
     Function to find occurances of a character in a string. only useful for when ',' is used in an entry field.
 
     Input(s): s (String), ch (Character)
@@ -319,6 +336,7 @@ def findOccurrences(s, ch):
 
 def getNumbers(input):
     """
+
     Function to extract the numbers from the entry fields after they've been validated. 
     This will grab the numbers found surrounding a '-' or multiple ',' in an entry field. 
     Then will place either the range of numbers or sequence of numbers in a list
@@ -366,8 +384,12 @@ def getNumbers(input):
         
 
 def date():
-    cp.DatePicker(format_str="%01d-%02d-%02d")
+    global datePicker
+    datePicker = cp.DatePicker(format_str="%01d-%02d-%02d")
+    
 
+def returnDate():
+    return datePicker.date
 
 def main():
     
@@ -386,101 +408,13 @@ def main():
     trays, pics, threads = [], [], []
     workbook = ""
 
+    analyzing = False
 
-
-    def validateTP(x,y):
-        """
-        Function to validate the Tray/Picture entries. We initialize countx and county for counting correct or 
-        valid characters found from the inputs.
-        Then we loop over each string and check if the character is valid (e.g. digit, '-' or ','). 
-        If so we increment count, if not we show a warning with the invalid character 
-        and clear the entry field in which the invalid character was found. 
-        After character validation, we check if countx and county 
-        are equal to the length of the strings passed in, meaning that each character was valid.
-
-        Input(s): x (String), y (String)
-        Output(s): boolean value based on whether or not both strings are valid.
-        Local Varaible(s): countx (int), county (int)
-
-        """
-        if x == "":
-            messagebox.showwarning("No Entry Warning!", "No entry found in the Tray Entry Field. Please enter data in the following format: '1-3' or '1,2,3'.")
-            return False
-        if y == "":
-            messagebox.showwarning("No Entry Warning!", "No entry found in the Picture Entry Field. Please enter data in the following format: '1-3' or '1,2,3'.")
-            return False
-
-        countx, county = 0, 0
-        for i in x:
-            if i.isdigit() or i == '-' or i == ',':
-                countx += 1
-            else:
-                messagebox.showwarning("Entry warning!", "Incorrect character of: '" + i + "' in Tray Entry Field. Please enter in the following format: '1-3' or '1,2,3'.")
-                gui.trayEntry.delete(0,tk.END)                
-
-                return False     
-        for o in y:
-            if o.isdigit() or o == '-' or o == ',':
-                county += 1
-            else: 
-                messagebox.showwarning("Entry warning!", "Incorrect character of: '" + o + "' in Picture Entry Field. Please enter in the following format: '1-3' or '1,2,3'.")
-                gui.picEntry.delete(0,tk.END)                
-                return False
-
-        if countx == len(x) and county == len(y):
-            return True
-        
-    def validateDate(date):
-        """
-        Function to validate the date input by the user. We check if date is less than 6 because it allows for folders to be structured 
-        as dd-mm-yy as well. Otherwise we check for digits and the '-' character if anything else is found, 
-        then we warn the user about the found character and then clear the entry field for retrying.
-        
-        Input(s): date (String)
-        Output(s): boolean if count found == len of date 
-        Local Variable(s): count (int) , dashes (list of indicies), numCount (int)
-
-        """
-
-        if date == "":
-            messagebox.showwarning("No Entry Warning!", "No entry found in Date entry. Please enter a date in the following format: 'mm-dd-yy'.")
-            return False
-
-        elif len(date) < 6 or len(date) > 8 :
-            messagebox.showwarning("Date Warning!", "Date entered has too many or too little characters. Please enter a date in the following format: 'mm-dd-yy'.")
-            gui.dateEntry.delete(0,tk.END)
-            return False
-        else:
-            dashes = findOccurrences(date, '-')
-            numCount = 0
-            s1 = date[0:dashes[1]]
-            s2 = date[dashes[1]:]
-            s1 = s1.split('-')
-            s2 = s2.split('-')
-
-            for str in s1:
-                if len(str) > 2:
-                    messagebox.showwarning("Incorrect Date Warning!", "An incorrect date of: "+ date +" has been found. Please enter a date in the following format: 'mm-dd-yy'.")
-                    return False
-            
-            for str in s2:
-                if len(str) > 2:
-                    messagebox.showwarning("Incorrect Date Warning!", "An incorrect date of: "+ date +" has been found. Please enter a date in the following format: 'mm-dd-yy'.")
-                    return False
-
-            count = 0
-            for i in date:
-                if i.isdigit() or i == '-':
-                    count+=1
-                else:
-                    messagebox.showwarning("Incorrect Character Warning!", "Incorrect character of: " + i +" has been found. Only use the following characters: '-'.")
-                    return False
-
-            if count == len(date):
-                return True
+    gui.calendarBtn.config(command=date)
 
     def newOrExisting(trays):
         """
+        
         Function for determining whether a new spreadsheet or an existing spreadsheet will be used to hold data from the analyzing process.
         We get the option selected from the radio buttons on the GUI and return True if one was selected, otherwise we show a 
         messagebox warning letting the user know neither button was picked, and return false
@@ -516,67 +450,135 @@ def main():
                 wb.save(file)
                 return file
 
+    def validateTP(x,y):
+        """
+
+        Function to validate the Tray/Picture entries. We initialize countx and county for counting correct or 
+        valid characters found from the inputs.
+        Then we loop over each string and check if the character is valid (e.g. digit, '-' or ','). 
+        If so we increment count, if not we show a warning with the invalid character 
+        and clear the entry field in which the invalid character was found. 
+        After character validation, we check if countx and county 
+        are equal to the length of the strings passed in, meaning that each character was valid.
+
+        Input(s): x (String), y (String)
+        Output(s): boolean value based on whether or not both strings are valid.
+        Local Varaible(s): countx (int), county (int)
+
+        """
+
+        if x == "":
+            messagebox.showwarning("No Entry Warning!", "No entry found in the Tray Entry Field. Please enter data in the following format: '1-3' or '1,2,3'.")
+            return False
+        if y == "":
+            messagebox.showwarning("No Entry Warning!", "No entry found in the Picture Entry Field. Please enter data in the following format: '1-3' or '1,2,3'.")
+            return False
+
+        countx, county = 0, 0
+        for i in x:
+            if i.isdigit() or i == '-' or i == ',':
+                countx += 1
+            else:
+                messagebox.showwarning("Entry warning!", "Incorrect character of: '" + i + "' in Tray Entry Field. Please enter in the following format: '1-3' or '1,2,3'.")
+                gui.trayEntry.delete(0,tk.END)                
+
+                return False     
+        for o in y:
+            if o.isdigit() or o == '-' or o == ',':
+                county += 1
+            else: 
+                messagebox.showwarning("Entry warning!", "Incorrect character of: '" + o + "' in Picture Entry Field. Please enter in the following format: '1-3' or '1,2,3'.")
+                gui.picEntry.delete(0,tk.END)                
+                return False
+
+        if countx == len(x) and county == len(y):
+            return True
+
+    def validateDate(date): 
+        """
+        Function to validate the date input by the user. We check if date is less than 6 because it allows for folders to be structured 
+        as d-mm-yy as well.
+        
+        Input(s): date (String)
+        Output(s): True or False if folder containing date path is found.
+        Local Variable(s):
+
+        """
+
+        return glob.glob("../photos/"+ date + "*", recursive=True)[0]
+
+
     def sendToAnalyzer():
         """
-        Function to send data from entry fields to diskAnalyzer. We grab the entry fields' values and strip any 
+        Function to send data from GUI fields to diskAnalyzer. We grab the GUI fields' values and strip any 
         whitespace from the front/back so that it doesnt mess up with our validation methods. 
-        Then we validate the entry fields and upon them returning true, 
-        we disable all buttons and then run the analyzer methods with the validated data gained from the GUI.
+        Then we validate the fields and upon them returning true, 
+        we disable all buttons and then run the analyzer methods with the validated data gained.
         
         Input(s): None
         Output(s) None
-        Local Varaible(s): None
+        Local Varaible(s): trayStr/picStr/dateStr (str), numTrays/numPics (int), t (thread obj), threads (list of threads), t/elapsedTime (float)
 
         """
+
         gui.trayEntry.config(state = 'disabled')
         gui.picEntry.config(state = 'disabled')
-
+        gui.calendarBtn.config(state = 'disabled')
+       
         trayStr = gui.trayEntry.get().rstrip().lstrip()
         picStr = gui.picEntry.get().rstrip().lstrip()
-        dateStr = cp.get().rstrip().lstrip()
+        date = returnDate().rstrip().lstrip()
+
+        # uncomment out if wishing to use manual date entry.
+        # dateStr = gui.dateEntry.get().rstrip().lstrip()
 
         # uncomment out the following lines for testing date capturing.
-        print(dateStr)
+        print(date)
         # print(type(dateStr))
         # print(len(dateStr))
         
-        if validateTP(trayStr, picStr):
+        if validateTP(trayStr, picStr) and validateDate(date):
             trays = getNumbers(trayStr)
             pics = getNumbers(picStr)
             workbook = newOrExisting(trays)
 
             if workbook == ".xlsx": #if saving the workbook filename is cancelled, file will become ".xlsx" and still create a spreadsheet and run the analyzing. This will prevent that.
                 os.remove(workbook) 
+                gui.trayEntry.config(state = 'normal')
+                gui.picEntry.config(state = 'normal')
+                gui.calendarBtn.config(state = 'normal')
                 return messagebox.showwarning("No Save/Existing Spreadsheet Name Warning!", "No name has been selected for the spreadsheet you wish to use. Please retry.")
 
             numTrays = len(trays)
             numPics = len(pics)
 
             if numPics * numTrays > 8:
+                gui.trayEntry.config(state = 'normal')
+                gui.picEntry.config(state = 'normal')
+                gui.calendarBtn.config(state = 'normal')
                 return messagebox.showwarning("Input Warning!", "Current inputs from Tray/Picture entry fields will spawn too many threads. Use the following as a guide for entering data into tray/pictures entry fields: trays * pictures <= 8.")
             
         
-            for i in range(len(trays)):
-                for j in range(len(pics)): 
-                    t = thr.Thread(target = threadHandler, args = [dateStr, trays[i], pics[j], workbook])
-                    threads.append(t)
-                    t.start()
-            
-            for  t in threads:
-                t.join()
+        for i in range(len(trays)):
+            for j in range(len(pics)): 
+                t = thr.Thread(target = threadHandler, args = [date, trays[i], pics[j], workbook])
+                threads.append(t)
+                t.start()
+        
+        for  t in threads:
+            t.join()
 
 
         gui.trayEntry.config(state = 'normal')
         gui.picEntry.config(state = 'normal')
+        gui.calendarBtn.config(state = 'normal')
 
+        print("Complete.")
         return
                 
+    
     uploadBtn = tk.Button(root, text= "Analyze", command=sendToAnalyzer, height = 1, width = 10)
     uploadBtn.grid(row= 5, column = 0)    
-
-    calendarBtn = tk.Button(root, text="Pick a Date", command=date)
-    calendarBtn.grid(row = 3, column = 1, pady = (0,60))
-
 
     root.mainloop()
 

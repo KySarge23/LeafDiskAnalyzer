@@ -83,3 +83,9 @@ class analyzerGUI:
 
         self.dateLabel= Label(master, text="Date:")
         self.dateLabel.grid(row = 3, column= 0, pady=(0,60))
+        self.calendarBtn = tk.Button(master, text="Pick a Date")
+        self.calendarBtn.grid(row = 3, column = 1, pady = (0,60))
+        # # self.dateEntry = Entry(master)
+        # # self.dateEntry.insert(0, "Placeholder: 'mm-dd-yy'")
+        # self.dateEntry.grid(row = 3, column = 1, pady = (0,60))
+        # self.dateEntry.bind("<Button-1>", clearDateEntry)

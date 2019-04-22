@@ -10,13 +10,6 @@ import tkinter as tk
 import time
 from tkinter import ttk
 
-full_date = None
-
-def sets(string):
-    global full_date
-    full_date = string
-    return
-
 class DatePicker(tk.Toplevel):
     """
     Description:
@@ -38,6 +31,7 @@ class DatePicker(tk.Toplevel):
         super().__init__()
         self.widget = widget
         self.str_format = format_str
+        self.date = ""
 
         self.title("Date Picker")
         self.resizable(0, 0)
@@ -221,7 +215,6 @@ class DatePicker(tk.Toplevel):
 
         self.date = self.str_format % (month, date, year)
         #  Replace with parent 'widget' of your choice.
-        sets(self.date) #set global variable of full_date
 
         try:
             self.widget.delete(0, tk.END)
@@ -229,9 +222,6 @@ class DatePicker(tk.Toplevel):
         except AttributeError:
             pass
         return
-  
 
-def get():
-    return full_date
 
 
