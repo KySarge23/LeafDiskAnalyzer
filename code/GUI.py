@@ -6,7 +6,7 @@ from tkinter import messagebox
 from tkinter import ttk
 
 
-#Author(s): Erica Gitlin, Colton Eddy, Kyle Sargent, Emily Box
+#Author(s): Colton Eddy, Kyle Sargent, Emily Box
 
 class analyzerGUI:
     def __init__(self, master):
@@ -81,11 +81,17 @@ class analyzerGUI:
         self.picEntry.insert(0,"Placeholder: '1-3'")
         self.picEntry.bind("<Button-1>", clearPicEntry)
 
+        self.phenoLabel = Label(master, text = "Phenotype(s):")
+        self.phenoLabel.grid(row = 3 , column = 0, pady = (0,10))
+        self.phenoEntry = Entry(master)
+        self.phenoEntry.insert(0, "Placeholder: '1-3'")
+        self.phenoEntry.grid(row = 3, column = 1, pady = (0,10))
+
         self.dateLabel= Label(master, text="Date:")
-        self.dateLabel.grid(row = 3, column= 0, pady=(0,60))
+        self.dateLabel.grid(row = 4, column= 0, pady=(0,60))
         self.calendarBtn = tk.Button(master, text="Pick a Date")
-        self.calendarBtn.grid(row = 3, column = 1, pady = (0,60))
-        # # self.dateEntry = Entry(master)
-        # # self.dateEntry.insert(0, "Placeholder: 'mm-dd-yy'")
-        # self.dateEntry.grid(row = 3, column = 1, pady = (0,60))
+        self.calendarBtn.grid(row = 4, column = 1, pady = (0,60))
+        # self.dateEntry = Entry(master)
+        # self.dateEntry.insert(0, "Placeholder: 'mm-dd-yy'")
+        # self.dateEntry.grid(row = 4, column = 1, pady = (0,60))
         # self.dateEntry.bind("<Button-1>", clearDateEntry)
