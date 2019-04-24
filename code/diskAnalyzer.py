@@ -37,7 +37,7 @@ from tkinter import messagebox
 
 thrLock = thr.Lock()
 
-def writeToExcel(value, workbookName, sheet, date, picNum, phenoNum):
+def writeToExcel(value, workbookName, sheet, date, picNum,): #phenoNum):
     """
 
     This function will handle any writing to the spreadsheet document that is required.
@@ -55,7 +55,7 @@ def writeToExcel(value, workbookName, sheet, date, picNum, phenoNum):
     dateCol, dateRow = 0, 0
     foundDate = False
     pic = "Picture: " + str(picNum)
-    pheno = "Pheno: " + str(phenoNum)
+    # pheno = "Pheno: " + str(phenoNum)
 
     for cell in ws[1]:
         if cell.value == date:
@@ -72,7 +72,8 @@ def writeToExcel(value, workbookName, sheet, date, picNum, phenoNum):
                 if ws.cell(row, ratioCol).value != None:
                     continue
                 else:
-                    ratioCell = ws.cell(row , ratioCol, value = pic + ", " + pheno + ", Ratio: "+ str(value))
+                    # ratioCell = ws.cell(row , ratioCol, value = pic + ", " + pheno + ", Ratio: "+ str(value))
+                    ratioCell = ws.cell(row , ratioCol, value = pic + ", Ratio: "+ str(value))
                     # ratioCell = ws.cell(i, j, value = value)
                     # ratioCell.number_format = "0.00%"
                     wb.save(workbookName)
@@ -106,7 +107,8 @@ def writeToExcel(value, workbookName, sheet, date, picNum, phenoNum):
                 if ws.cell(row,ratioCol).value != None: continue
                 else:
                     # picCell = ws.cell(ratioRow, ratioCol-1, value = "Picture "+ str(picNum))
-                    ratioCell = ws.cell(row, ratioCol, value = pic + ", " + pheno + ", Ratio: "+ str(value))
+                    # ratioCell = ws.cell(row, ratioCol, value = pic + ", " + pheno + ", Ratio: "+ str(value))
+                    ratioCell = ws.cell(row , ratioCol, value = pic + ", Ratio: "+ str(value))
                     # ratioCell = ws.cell(i, j, value = value)
                     # ratioCell.number_format = "0.00%"
                     wb.save(workbookName)
@@ -238,7 +240,7 @@ def calculateMildew(path):
     return mildewRatio / area * 100
 
 
-def threadHandler(date, trayNum, picNum, phenoNum, spreadsheet):
+def threadHandler(date, trayNum, picNum, spreadsheet):
     """
     
     This Function accepts the three user inputs from the main function/GUI as arguments.
@@ -258,7 +260,8 @@ def threadHandler(date, trayNum, picNum, phenoNum, spreadsheet):
     date = glob.glob("../photos/"+ date + "*", recursive=True)[0]
     tray = 'tray '+ str(trayNum)
     dirName = date + "/" + tray + "/"
-    fName = str(picNum) + "-160x271_" + str(phenoNum)
+    fName = str(picNum) + "-160x271_" + str(picNum)
+    # fName = str(picNum) + "-160x271_" + str(phenoNum)
 
 
     path = os.path.abspath(dirName + fName)
@@ -267,7 +270,8 @@ def threadHandler(date, trayNum, picNum, phenoNum, spreadsheet):
             path = path + ".png"
             mildewRatio = calculateMildew(path)
             thrLock.acquire()
-            writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
+            writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum)
+            # writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
             print(thr.current_thread().getName() +" returning")
             print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
             thrLock.release()
@@ -277,7 +281,8 @@ def threadHandler(date, trayNum, picNum, phenoNum, spreadsheet):
             path = path + ".jpeg"
             mildewRatio = calculateMildew(path)
             thrLock.acquire()
-            writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
+            writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum)
+            # writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
             print(thr.current_thread().getName() +" returning")
             print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
             thrLock.release()
@@ -287,7 +292,8 @@ def threadHandler(date, trayNum, picNum, phenoNum, spreadsheet):
             path = path + ".jpg"
             mildewRatio = calculateMildew(path)
             thrLock.acquire()
-            writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
+            writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum)
+            # writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
             print(thr.current_thread().getName() +" returning")
             print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
             thrLock.release()
@@ -297,7 +303,8 @@ def threadHandler(date, trayNum, picNum, phenoNum, spreadsheet):
             path = path + ".tiff"
             mildewRatio = calculateMildew(path)
             thrLock.acquire()
-            writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
+            writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum)
+            # writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
             print(thr.current_thread().getName() +" returning")
             print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
             thrLock.release()
@@ -307,7 +314,8 @@ def threadHandler(date, trayNum, picNum, phenoNum, spreadsheet):
             path = path + ".tif"
             mildewRatio = calculateMildew(path)
             thrLock.acquire()
-            writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
+            writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum)
+            # writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
             print(thr.current_thread().getName() + " returning")
             print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
             thrLock.release()
@@ -518,9 +526,9 @@ def main():
         gui.trayEntry.config(state = 'disabled')
         gui.picEntry.config(state = 'disabled')
         gui.calendarBtn.config(state = 'disabled')
-        gui.phenoEntry.config(state = 'disabled')
         gui.r1.config(state = 'disabled')
         gui.r2.config(state = 'disabled')
+        # gui.phenoEntry.config(state = 'disabled')
         # gui.dateEntry.config(state = 'disabled')
         return
 
@@ -528,9 +536,9 @@ def main():
         gui.trayEntry.config(state = 'normal')
         gui.picEntry.config(state = 'normal')
         gui.calendarBtn.config(state = 'normal')
-        gui.phenoEntry.config(state = 'normal')
         gui.r1.config(state = 'normal')
         gui.r2.config(state = 'normal')
+        # gui.phenoEntry.config(state = 'normal')
         # gui.dateEntry.config(state = 'normal')
 
         return
@@ -553,7 +561,7 @@ def main():
        
         trayStr = gui.trayEntry.get().rstrip().lstrip()
         picStr = gui.picEntry.get().rstrip().lstrip()
-        pheno = gui.phenoEntry.get().rstrip().lstrip()
+        # pheno = gui.phenoEntry.get().rstrip().lstrip()
         date = returnDate().rstrip().lstrip()
 
         # uncomment out if wishing to use manual date entry.
@@ -568,7 +576,7 @@ def main():
             messagebox.showinfo("Successful Verification!", "Data has been successfully verified. The analyzing process will now begin.")
             trays = getNumbers(trayStr)
             pics = getNumbers(picStr)
-            phenos = getNumbers(pheno)
+            # phenos = getNumbers(pheno)
             try:
                 workbook = newOrExisting(trays)
             except:
@@ -582,21 +590,25 @@ def main():
 
             numTrays = len(trays)
             numPics = len(pics)
-            numPhenos = len(phenos)
+            # numPhenos = len(phenos)
 
-            if numPics * numTrays *numPhenos > 8 or numPics * numPhenos * numTrays> 8 or numPhenos * numTrays * numPics> 8:
-                enableAll(gui)
-                return messagebox.showwarning("Input Warning!", "Current inputs from Tray/Picture/Pheno entry fields will spawn too many threads. Use the following as a guide for entering data into tray/pictures entry fields: trays * pictures <= 8.")
+            # if numPics * numTrays *numPhenos > 8 or numPics * numPhenos * numTrays> 8 or numPhenos * numTrays * numPics> 8:
+            #     enableAll(gui)
+            #     return messagebox.showwarning("Input Warning!", "Current inputs from Tray/Picture/Pheno entry fields will spawn too many threads. Use the following as a guide for entering data into tray/pictures entry fields: trays * pictures <= 8.")
             
+            if numPics * numTrays > 8:
+                enableAll(gui)
+                return messagebox.showwarning("Input Warning!", "Current inputs from Tray/Pictures entry fields will spawn too many threads. Use the following as a guide for entering data into tray/pictures entry fields: trays * pictures <= 8.")
         
         # print(workbook)
 
             for i in range(len(trays)):
-                for j in range(len(pics)): 
-                    for p in range(len(phenos)):
-                        t = thr.Thread(target = threadHandler, args = [date, trays[i], pics[j], phenos[p], workbook])
+                for j in range(len(pics)):
+                        t = thr.Thread(target = threadHandler, args = [date, trays[i], pics[j], workbook]) 
                         threads.append(t)
                         t.start()
+                    # for p in range(len(phenos)):
+                        # t = thr.Thread(target = threadHandler, args = [date, trays[i], pics[j], phenos[p], workbook])
             
             for  t in threads:
                 t.join()
