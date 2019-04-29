@@ -2,18 +2,18 @@
 
 #Imports that dont need to be installed via pip
 import math
-import tkinter as tk
 import os
-import threading as thr
 import glob
 import time
+import tkinter as tk
+import threading as thr
+import numpy as np
 
 #--------------------------------------------#
 
 #Imports that need to be installed via pip:
 import cv2 as cv #opencv-python
 import openpyxl, openpyxl.styles #openpyxl
-import numpy as np #numpy  
 
 #--------------------------------------------#
 
@@ -89,7 +89,7 @@ def writeToExcel(value, workbookName, sheet, date, picNum,): #phenoNum):
             wb.save(workbookName)
 
         else:
-            for i in range(startCol, 25, 10):
+            for i in range(startCol, 200, 10):
                 if ws.cell(row = startRow, column = i).value != None: continue
                 else: 
                     dateCell = ws.cell(startRow, i, value = date)
@@ -114,11 +114,8 @@ def writeToExcel(value, workbookName, sheet, date, picNum,): #phenoNum):
                     wb.save(workbookName)
                     return
 
-
-
     wb.save(workbookName)
     return
-
 
 def calculateMildew(path):
     """
@@ -129,12 +126,13 @@ def calculateMildew(path):
     
     """
 
-    img = cv.imread(path,0) #read in as Grayscale
+    img = cv.imread(path,1) 
     img = cv.resize(img,(423,280)) #resize image, for easier reading and faster execution.
-   
     img = cv.medianBlur(img,5) #add blur to reduce noise on photo.
+    cimg = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
    
-    cimg = cv.cvtColor(img,cv.COLOR_GRAY2BGR) #convert back to BGR scale for the drawn circle to show up as whatever color specified.
+    # cimg = cv.cvtColor(img,cv.COLOR_GRAY2BGR) #convert back to BGR scale for the drawn circle to show up as whatever color specified.
+    # cimg = img
     """The following lines can be used to have an algorithm detect circles for us.
        or can use the hard-coded version that is commented out below"""
 
@@ -167,8 +165,8 @@ def calculateMildew(path):
     #for circ in circles[0,:]:
         #draw the detected outer circle
         #params are as follows: (image, center coords, radius, bgr values, thickness)
-     #   cv.circle(cimg,(circ[0],circ[1]),circ[2],(0,255,0),2) #this is the only circle drawn
-      #  rad = circ[2] #grab the radius
+        #cv.circle(cimg,(circ[0],circ[1]),circ[2],(0,255,0),2) #this is the only circle drawn
+        #rad = circ[2] #grab the radius
 
 
     """The following lines can be used to hard-code in the circle
@@ -180,33 +178,52 @@ def calculateMildew(path):
 
 
     center = (int(w / 2), int(h / 2))
-    rad = 200
+    rad = 205
     cv.circle(cimg, center, rad, (0,0,255), 2)
 
     area = math.pi * rad ** 2 #calculate the area of the circle detected in pixels
     # print("Area of circle drawn is: " + str(int(area))+"px\n")
 
-    img = img[0:h, 35:w-35]
+    img = img[0:h, 50:w-50]
+
+    hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
+
+    #getting height and width of image
+    height, width, channel= hsv.shape
+    # print (height, width)
+
+    #adding hsv values to list
+    hsvValues = []
+    for x in range(0, width):
+        for y in range(0, height):
+            pixel= hsv[y, x]
+            #print(pixel)
+            hsvValues.append(pixel)
+
+    '''Code below maskes out code below a certain brightness
+        This is a common thing HSV is used for from what I've seen'''
+
+    #darker colors (to mask out)
+    lower_green = np.array([0,0, 160])
+    #lighter colors
+    upper_green = np.array([255, 255, 255])
+
+    #
+    mask = cv.inRange(hsv, lower_green, upper_green)
+    res = cv.bitwise_and(img, img, mask=mask)
+
+
+    # cv.imshow("hsvDetection", res)
+    # cv.waitKey(0)
+    # cv.destroyAllWindows()
 
     # print("Edge Detection Starting")
 
-    #second param: (1= color, 0= grayscale, -1 = unchanged)
-    #however OCV uses BGR coloring and Matplot uses RGB coloring, so
-    #when reading in with OCV, need to change to RGB if showing with matplot
-    #if we want pictures to show up in RGB correctly colored.
-    #notice when matplot pops up, color is distorted.
-    #Reading of the same photo, in color for displaying and grayscale for edgeDetection.
-    #imgC = cv.imread(x,1)
-
-    #cv.imshow('Original', img)
-
-    #Converting img to RGB:
-    #imgC = cv.cvtColor(imgC, cv.COLOR_BGR2RGB)
 
     #use canny algorithm for edge detection
     #see https://docs.opencv.org/3.4/da/d22/tutorial_py_canny.html
     #for more details.
-    edges = cv.Canny(img,120,200)
+    edges = cv.Canny(res,350,700)
     #Save image into photos folder for now. so can be used in analyzeDisks method
     # print("Edge Detection Complete")
 
@@ -214,6 +231,8 @@ def calculateMildew(path):
     # cv.imshow("edges", edges)
     # cv.waitKey(0)
     # cv.destroyAllWindows()
+
+    # cv.imwrite(".../edges.tif", edges)
 
 
     #we now set a threshold using cv.threshhold. This will help to detect possible
@@ -276,7 +295,17 @@ def threadHandler(date, trayNum, picNum, spreadsheet):
             print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
             thrLock.release()
             return 
-
+    elif os.path.exists(path + ".gif"):
+            path = path + ".gif"
+            mildewRatio = calculateMildew(path)
+            thrLock.acquire()
+            writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum)
+            # writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
+            print(thr.current_thread().getName() +" returning")
+            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+            thrLock.release()
+            return
+            
     elif os.path.exists(path + ".jpeg"): #validate the path
             path = path + ".jpeg"
             mildewRatio = calculateMildew(path)
@@ -354,8 +383,33 @@ def getNumbers(input):
 
     nums, comms = [], []
 
-    n1,n2 = 0,0
 
+    if '-' in input and ',' in input:
+        comms = findOccurrences(input, ',')
+        hyp = findOccurrences(input, '-')
+        for idx in hyp:
+              n1 = int(input[idx-1])
+              n2 = int(input[idx+1])
+        if n1 > n2: 
+            return messagebox.showwarning("Entry Warning!", "Left Hand Side of '-' is greater than Right Hand Side. Please fix the order and retry.")
+        else:
+            for i in range (n1, n2+1):
+                nums.append(i)
+        
+        for ind in comms:
+            n1 = int(input[ind-1])
+            n2 = int(input[ind+1])
+            if n1 in nums:
+                nums.append(n2)
+            elif n2 in nums:
+                nums.append(n1)
+            elif n1 and n2 not in nums:
+                nums.append(n1)
+                nums.append(n2)
+            else: 
+                continue
+        return nums
+    
     if '-' in input:
         idx = input.index('-')
         n1 = int(input[idx-1])
@@ -369,6 +423,7 @@ def getNumbers(input):
     
     if ',' in input and len(input) >= 3:
         comms = findOccurrences(input, ',')
+    
         for idx in comms:
             n1 = int(input[idx-1])
             n2 = int(input[idx+1])
@@ -385,7 +440,7 @@ def getNumbers(input):
         n1 = int(input)
         nums.append(n1)
         return nums
-        
+
 
 def date():
     global datePicker
@@ -430,7 +485,7 @@ def main():
         """
         value = gui.option.get()
         if value == "True":
-                print("Creating new Spread Sheet")
+                print("Creating New Spreadsheet")
                 wb = openpyxl.Workbook()
                 rm = wb['Sheet']
                 wb.remove(rm)
@@ -438,7 +493,7 @@ def main():
                 for tray in trays:
                     ws = wb.create_sheet("tray " + str(tray))
                 
-                file = asksaveasfilename(initialdir = ".",title = "Save As",filetypes = (("xlsx","*.xlsx"),("All Files","*.*"))) + ".xlsx" #creates new workbook (currently creates a single placeholder book in the current directory               
+                file = asksaveasfilename(initialdir = ".",title = "Save As",filetypes = (("xlsx","*.xlsx"),("All Files","*.*")), defaultextension = '.xlsx',) #creates new workbook (currently creates a single placeholder book in the current directory               
                 wb.save(file)
                 return file
 
@@ -559,9 +614,9 @@ def main():
 
         disableAll(gui)
        
-        trayStr = gui.trayEntry.get().rstrip().lstrip()
-        picStr = gui.picEntry.get().rstrip().lstrip()
-        # pheno = gui.phenoEntry.get().rstrip().lstrip()
+        trayStr = gui.trayEntry.get().rstrip().lstrip().replace(" ", "")
+        picStr = gui.picEntry.get().rstrip().lstrip().replace(" ", "")
+        # pheno = gui.phenoEntry.get().rstrip().lstrip().replace(" ", "")
         date = returnDate().rstrip().lstrip()
 
         # uncomment out if wishing to use manual date entry.
