@@ -121,8 +121,14 @@ def calculateMildew(path):
     """
     
     Area finding function, Will utilize HoughCircle method to detect circles
-    within the photo or hard coded method to detect circles . Then will use that circle to find the area within it which
-    is what will be used later in the edge detection
+    within the photo or hard coded method to detect circles. After finding the circle, the image is cropped down and then hsv detection is ran on 
+    it. After the hsv is completed, Edge Detection is ran on the newly hsv filtered photo. After Edge detection, contouring is performed for  
+
+    Input(s): path (String)
+    Output(s): mildewRatio (int)
+    Local Variable(s): img/cimg/hsv/mask/res/edges (numpy ndarray), height/width/area/rad/channel/mildewRatio/cont/contArea (int), hsvValues (array of ints), 
+                       lower_green/upper_green/contours/hierarchy (nparray
+
     
     """
 
@@ -173,8 +179,8 @@ def calculateMildew(path):
        or can use above to use an algorithm to detect the circle"""
 
     h,w = img.shape[:2]
-    # print("height is: " + str(h))
-    # print("width is: " + str(w))
+    # print("height is: " + str(height))
+    # print("width is: " + str(width))
 
 
     center = (int(w / 2), int(h / 2))
@@ -208,9 +214,8 @@ def calculateMildew(path):
     #lighter colors
     upper_green = np.array([255, 255, 255])
 
-    #
-    mask = cv.inRange(hsv, lower_green, upper_green)
-    res = cv.bitwise_and(img, img, mask=mask)
+    hsvMask = cv.inRange(hsv, lower_green, upper_green)
+    res = cv.bitwise_and(img, img, mask=hsvMask)
 
 
     # cv.imshow("hsvDetection", res)
@@ -231,7 +236,6 @@ def calculateMildew(path):
     # cv.imshow("edges", edges)
     # cv.waitKey(0)
     # cv.destroyAllWindows()
-
     # cv.imwrite(".../edges.tif", edges)
 
 
