@@ -141,8 +141,9 @@ def calculateMildew(path):
     if h < 280 and w < 423:
         print("Image Resolution too small for analyzing! Image passed is too small for analyzing, please resize or retry with a different image.")
         return 0
-        
-    img = cv.resize(img,(423,280)) #resize image, for easier reading and faster execution.
+    if h > 280 and w > 423:
+        img = cv.resize(img,(423,280)) #resize image, for easier reading and faster execution.
+   
     img = cv.medianBlur(img,5) #add blur to reduce noise on photo.
     cimg = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
    
