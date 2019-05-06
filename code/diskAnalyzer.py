@@ -27,6 +27,7 @@ import calendarPicker as cp
 from pathlib import Path as pth
 from tkinter.filedialog import askopenfilename, asksaveasfilename
 from tkinter import messagebox
+from datetime import datetime as dt
 
 #--------------------------------------------#
 
@@ -65,19 +66,19 @@ def writeToExcel(value, workbookName, sheet, date, picNum,): #phenoNum):
             break
     
     if foundDate == True:
-        ratioRow = dateRow + 1
+        ratioRow = picNum + 1
         ratioCol = dateCol
+        ratioCell = ws.cell(ratioRow , ratioCol, value = pic + ", Ratio: "+ str(value))
+        wb.save(workbookName)
+        return
 
-        for row in range(ratioRow, 10000): #limit to 10000 runs for now
-                if ws.cell(row, ratioCol).value != None:
-                    continue
-                else:
+        # for row in range(ratioRow, 10000): #limit to 10000 runs for now
+        #         if ws.cell(row, ratioCol).value != None:
+        #             continue
+        #         else:
                     # ratioCell = ws.cell(row , ratioCol, value = pic + ", " + pheno + ", Ratio: "+ str(value))
-                    ratioCell = ws.cell(row , ratioCol, value = pic + ", Ratio: "+ str(value))
                     # ratioCell = ws.cell(i, j, value = value)
                     # ratioCell.number_format = "0.00%"
-                    wb.save(workbookName)
-                    return
 
     elif foundDate == False:
         if ws.cell(startRow,startCol).value == None:
@@ -89,7 +90,7 @@ def writeToExcel(value, workbookName, sheet, date, picNum,): #phenoNum):
             wb.save(workbookName)
 
         else:
-            for i in range(startCol, 200, 10):
+            for i in range(startCol, 200, 6):
                 if ws.cell(row = startRow, column = i).value != None: continue
                 else: 
                     dateCell = ws.cell(startRow, i, value = date)
@@ -100,19 +101,17 @@ def writeToExcel(value, workbookName, sheet, date, picNum,): #phenoNum):
                     wb.save(workbookName)
                     break
 
-        ratioRow = dateRow + 1
+        ratioRow = picNum + 1
         ratioCol = dateCol
+        ratioCell = ws.cell(ratioRow , ratioCol, value = pic + ", Ratio: "+ str(value))
 
-        for row in range(ratioRow, 10000): #limit to 25 runs for now
-                if ws.cell(row,ratioCol).value != None: continue
-                else:
+        # for row in range(ratioRow, 10000): #limit to 25 runs for now
+        #         if ws.cell(row,ratioCol).value != None: continue
+        #         else:
                     # picCell = ws.cell(ratioRow, ratioCol-1, value = "Picture "+ str(picNum))
                     # ratioCell = ws.cell(row, ratioCol, value = pic + ", " + pheno + ", Ratio: "+ str(value))
-                    ratioCell = ws.cell(row , ratioCol, value = pic + ", Ratio: "+ str(value))
                     # ratioCell = ws.cell(i, j, value = value)
                     # ratioCell.number_format = "0.00%"
-                    wb.save(workbookName)
-                    return
 
     wb.save(workbookName)
     return
@@ -132,7 +131,17 @@ def calculateMildew(path):
     
     """
 
+
     img = cv.imread(path,1) 
+    h,w = img.shape[:2]
+
+    # print(h)
+    # print(w)
+
+    if h < 280 and w < 423:
+        print("Image Resolution too small for analyzing! Image passed is too small for analyzing, please resize or retry with a different image.")
+        return 0
+        
     img = cv.resize(img,(423,280)) #resize image, for easier reading and faster execution.
     img = cv.medianBlur(img,5) #add blur to reduce noise on photo.
     cimg = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
@@ -190,7 +199,7 @@ def calculateMildew(path):
     area = math.pi * rad ** 2 #calculate the area of the circle detected in pixels
     # print("Area of circle drawn is: " + str(int(area))+"px\n")
 
-    img = img[0:h, 50:w-50]
+    img = img[0:h, 55:w-55]
 
     hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
 
@@ -210,7 +219,7 @@ def calculateMildew(path):
         This is a common thing HSV is used for from what I've seen'''
 
     #darker colors (to mask out)
-    lower_green = np.array([0,0, 160])
+    lower_green = np.array([0,0, 170])
     #lighter colors
     upper_green = np.array([255, 255, 255])
 
@@ -279,84 +288,132 @@ def threadHandler(date, trayNum, picNum, spreadsheet):
     """
 
     print(thr.current_thread())
-    
+
     date = glob.glob("../photos/"+ date + "*", recursive=True)[0]
-    tray = 'tray '+ str(trayNum)
-    dirName = date + "/" + tray + "/"
-    fName = str(picNum) + "-160x271_" + str(picNum)
+    tray = '/tray '+ str(trayNum)
+    dirName = date + tray + "/"
+    # print(dirName)    # fName = str(picNum) + "-160x271_" + str(picNum)
+    try:
+        photo = glob.glob(dirName + str(picNum) +"-160x271_"+ "*", recursive=True)[0]
+    except:
+        print("Path cannot be found! A path cannot be found for photo: " + str(picNum) + " in tray: " + str(trayNum) + " from the date: " + date[10:] +".")
+        return
     # fName = str(picNum) + "-160x271_" + str(phenoNum)
 
+    # print(photo)
 
-    path = os.path.abspath(dirName + fName)
+    # path = os.path.abspath(dirName + fName)
+    
+    path = os.path.abspath(photo)
 
-    if os.path.exists(path + ".png"): #validate the path
-            path = path + ".png"
-            mildewRatio = calculateMildew(path)
-            thrLock.acquire()
-            writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum)
-            # writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
-            print(thr.current_thread().getName() +" returning")
-            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
-            thrLock.release()
-            return 
-    elif os.path.exists(path + ".gif"):
-            path = path + ".gif"
-            mildewRatio = calculateMildew(path)
-            thrLock.acquire()
-            writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum)
-            # writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
-            print(thr.current_thread().getName() +" returning")
-            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
-            thrLock.release()
-            return
-            
-    elif os.path.exists(path + ".jpeg"): #validate the path
-            path = path + ".jpeg"
-            mildewRatio = calculateMildew(path)
-            thrLock.acquire()
-            writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum)
-            # writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
-            print(thr.current_thread().getName() +" returning")
-            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
-            thrLock.release()
+    print(path)
+    
+    if os.path.exists(path):
+        # print(thr.current_thread().getName() + " starting time: "  + str(startTime))
+        startTime = time.perf_counter()
+        mildewRatio = calculateMildew(path)
+        
+        if mildewRatio <= 0 :
             return
 
-    elif os.path.exists(path + ".jpg"): #validate the path
-            path = path + ".jpg"
-            mildewRatio = calculateMildew(path)
-            thrLock.acquire()
-            writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum)
-            # writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
-            print(thr.current_thread().getName() +" returning")
-            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
-            thrLock.release()
-            return 
+        endTime = time.perf_counter()
+        totalTime = endTime - startTime
+        print(totalTime)
+        if totalTime > 5: return print("Timeout in: " + thr.current_thread().getName() + " with runtime of: " +str(totalTime) +"s.")
+        # print(thr.current_thread().getName() + " ending time: "  + str(endTime))
 
-    elif os.path.exists(path + ".tiff"): #validate the path
-            path = path + ".tiff"
-            mildewRatio = calculateMildew(path)
-            thrLock.acquire()
-            writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum)
-            # writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
-            print(thr.current_thread().getName() +" returning")
-            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
-            thrLock.release()
-            return
 
-    elif os.path.exists(path + ".tif"): #validate the path
-            path = path + ".tif"
-            mildewRatio = calculateMildew(path)
-            thrLock.acquire()
-            writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum)
-            # writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
-            print(thr.current_thread().getName() + " returning")
-            print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
-            thrLock.release()
-            return 
-            
+        # if endTime - startTime > 1:
+        #     messagebox.showerror("Timeout Error!", "Selected photo of: " + path + " has caused a timeout error. Please try again with a different photo or lower the resolution of the current photo.")
+        #     return
+
+        
+        thrLock.acquire()
+        writeToExcel(mildewRatio, spreadsheet, tray[1:], date[10:], picNum)
+        # writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
+        print(thr.current_thread().getName() + " returning.")
+        print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+        thrLock.release()
+        return 
+
     else: #let user know the software has detected an invalid path
-            print("Invalid path detected, No file or directory resides in: \n" + path)
-            return
+        print("Invalid path detected, No file or directory resides in: \n" + path)
+        return
+
+    # if os.path.exists(path + ".png"): #validate the path
+    #         path = path + ".png"
+    #         # print(path)
+    #         mildewRatio = calculateMildew(path)
+    #         thrLock.acquire()
+    #         writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum)
+    #         # writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
+    #         print(thr.current_thread().getName() +" returning")
+    #         print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+    #         thrLock.release()
+    #         return 
+    # elif os.path.exists(path + ".gif"):
+    #         path = path + ".gif"
+    #         # print(path)
+    #         mildewRatio = calculateMildew(path)
+    #         thrLock.acquire()
+    #         writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum)
+    #         # writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
+    #         print(thr.current_thread().getName() +" returning")
+    #         print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+    #         thrLock.release()
+    #         return
+            
+    # elif os.path.exists(path + ".jpeg"): #validate the path
+    #         path = path + ".jpeg"
+    #         # print(path)
+    #         mildewRatio = calculateMildew(path)
+    #         thrLock.acquire()
+    #         writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum)
+    #         # writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
+    #         print(thr.current_thread().getName() +" returning")
+    #         print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+    #         thrLock.release()
+    #         return
+
+    # elif os.path.exists(path + ".jpg"): #validate the path
+    #         path = path + ".jpg"
+    #         # print(path)
+    #         mildewRatio = calculateMildew(path)
+    #         thrLock.acquire()
+    #         writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum)
+    #         # writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
+    #         print(thr.current_thread().getName() +" returning")
+    #         print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+    #         thrLock.release()
+    #         return 
+
+    # elif os.path.exists(path + ".tiff"): #validate the path
+    #         path = path + ".tiff"
+    #         # print(path)
+    #         mildewRatio = calculateMildew(path)
+    #         thrLock.acquire()
+    #         writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum)
+    #         # writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
+    #         print(thr.current_thread().getName() +" returning")
+    #         print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+    #         thrLock.release()
+    #         return
+
+    # elif os.path.exists(path + ".tif"): #validate the path
+    #         path = path + ".tif"
+    #         # print(path)
+    #         mildewRatio = calculateMildew(path)
+    #         thrLock.acquire()
+    #         writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum)
+    #         # writeToExcel(mildewRatio, spreadsheet, tray, date[10:], picNum, phenoNum)
+    #         print(thr.current_thread().getName() + " returning")
+    #         print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+    #         thrLock.release()
+    #         return 
+            
+    # else: #let user know the software has detected an invalid path
+    #         print("Invalid path detected, No file or directory resides in: \n" + path)
+    #         return
 
 
 def findOccurrences(s, ch):
@@ -390,57 +447,68 @@ def getNumbers(input):
 
     if '-' in input and ',' in input:
         comms = findOccurrences(input, ',')
-        hyp = findOccurrences(input, '-')
-        for idx in hyp:
-              n1 = int(input[idx-1])
-              n2 = int(input[idx+1])
-        if n1 > n2: 
-            return messagebox.showwarning("Entry Warning!", "Left Hand Side of '-' is greater than Right Hand Side. Please fix the order and retry.")
-        else:
-            for i in range (n1, n2+1):
-                nums.append(i)
-        
-        for ind in comms:
-            n1 = int(input[ind-1])
-            n2 = int(input[ind+1])
-            if n1 in nums:
-                nums.append(n2)
-            elif n2 in nums:
-                nums.append(n1)
-            elif n1 and n2 not in nums:
-                nums.append(n1)
-                nums.append(n2)
-            else: 
-                continue
+        # print(comms)
+        splitInput = input.split(',',len(comms))
+        # print(splitInput)
+        for splitStr in splitInput:
+            if '-' in splitStr:
+                splitSubStr = splitStr.split("-", 2)
+                n1 = splitSubStr[0]
+                n2 = splitSubStr[1]
+
+                if n1  == '':
+                    return nums #return nums here because invalid format found. do error handling in the sendToAnalyzer function.
+                elif n2 == '':
+                    return nums #same as for n1.
+
+                n1 = int(n1)
+                n2 = int(n2)
+                if n1 > n2: 
+                    return messagebox.showwarning("Entry Warning!", "Left Hand Side of '-' is greater than Right Hand Side. Please fix the order and retry.")
+                else:
+                    for i in range (n1, n2+1):
+                        nums.append(i)
+            else:
+                n = int(splitStr)
+                if n in nums:
+                    continue
+                else:
+                    nums.append(n)
         return nums
+        
     
     if '-' in input:
-        idx = input.index('-')
-        n1 = int(input[idx-1])
-        n2 = int(input[idx+1])
+        splitInput = input.split("-", 2)
+        # print(splitInput)
+        n1 = splitInput[0]
+        n2 = splitInput[1]
+        if n1  == '':
+            return nums #return nums here because invalid format found. do error handling in the sendToAnalyzer function.
+        elif n2 == '':
+            return nums #same as for n1.
+
+        n1 = int(n1)
+        n2 = int(n2)
         if n1 > n2: 
             return messagebox.showwarning("Entry Warning!", "Left Hand Side of '-' is greater than Right Hand Side. Please fix the order and retry.")
         else:
             for i in range (n1, n2+1):
                 nums.append(i)
             return nums
-    
+     
     if ',' in input and len(input) >= 3:
         comms = findOccurrences(input, ',')
-    
-        for idx in comms:
-            n1 = int(input[idx-1])
-            n2 = int(input[idx+1])
-            if n1 in nums:
-                nums.append(n2)
-            elif n2 in nums:
-                nums.append(n1)
+        # print(len(comms))
+        splitInput = input.split(',', len(comms))
+        for splitNum in splitInput:
+            n = int(splitNum)
+            if n in nums:
+               continue
             else:
-                nums.append(n1)
-                nums.append(n2)
+                nums.append(n)
         return nums
 
-    if len(input) == 1:
+    if '-' not in input and ',' not in input:
         n1 = int(input)
         nums.append(n1)
         return nums
@@ -460,6 +528,7 @@ def main():
     #the size of the window
     root.geometry('350x300')
     root.title("LDA GUI v1.0")
+    root.resizable(False, False)
 
     def exitWindow(e):
         if messagebox.askyesnocancel("Exit","Are you sure you want to close this application?"):
@@ -471,9 +540,8 @@ def main():
     trays, pics, threads = [], [], []
     workbook = ""
 
-    analyzing = False
-
     gui.calendarBtn.config(command=date)
+
 
     def newOrExisting(trays):
         """
@@ -529,10 +597,14 @@ def main():
 
         """
 
-        if x == "":
+        if x == "" and y == "":
+            messagebox.showwarning("No Entry Warning!", "No entry found in the Tray and Picture Entry Fields. Please enter data in the following format: '1-3' or '1,2,3'.")
+            return False
+
+        elif x == "":
             messagebox.showwarning("No Entry Warning!", "No entry found in the Tray Entry Field. Please enter data in the following format: '1-3' or '1,2,3'.")
             return False
-        if y == "":
+        elif y == "":
             messagebox.showwarning("No Entry Warning!", "No entry found in the Picture Entry Field. Please enter data in the following format: '1-3' or '1,2,3'.")
             return False
 
@@ -618,8 +690,11 @@ def main():
 
         disableAll(gui)
        
+        analyzing = True
         trayStr = gui.trayEntry.get().rstrip().lstrip().replace(" ", "")
         picStr = gui.picEntry.get().rstrip().lstrip().replace(" ", "")
+        # print(picStr)
+
         # pheno = gui.phenoEntry.get().rstrip().lstrip().replace(" ", "")
         date = returnDate().rstrip().lstrip()
 
@@ -627,28 +702,43 @@ def main():
         # date = gui.dateEntry.get().rstrip().lstrip()
 
         # uncomment out the following lines for testing date capturing.
-        print(date)
+        print("Selected date: " + date)
         # print(type(dateStr))
         # print(len(dateStr))
         
         if validateTP(trayStr, picStr) and validateDate(date):
-            messagebox.showinfo("Successful Verification!", "Data has been successfully verified. The analyzing process will now begin.")
             trays = getNumbers(trayStr)
             pics = getNumbers(picStr)
+            print(trays)
+            print(pics)
+            numTrays = len(trays)
+            numPics = len(pics)
+            # print(trays)
             # phenos = getNumbers(pheno)
+
+            if numPics  == 0 and numTrays == 0:
+                enableAll(gui)
+                return messagebox.showerror("Invalid Format Detected!", "An Invalid format was found in both the picture and tray numbers entry fields. Please retry with the following format: '1-3' or '1,2,3'.")
+            elif numTrays == 0:
+                enableAll(gui)
+                return messagebox.showerror("Invalid Format Detected!", "An Invalid format was found in the tray numbers entry field. Please retry with the following format: '1-3' or '1,2,3'.")
+            
+            elif numPics == 0:
+                enableAll(gui)
+                return messagebox.showerror("Invalid Format Detected!", "An Invalid format was found in the tray numbers entry field. Please retry with the following format: '1-3' or '1,2,3'.")
+
             try:
                 workbook = newOrExisting(trays)
             except:
                 enableAll(gui)
-                return messagebox.showerror("Selection Cancelled!", "Selection of existing sheet cancelled. Please retry again.")    
+                return messagebox.showerror("Selection Cancelled!", "Selection of existing sheet cancelled. Please try again.")    
 
             if workbook == ".xlsx": #if saving the workbook filename is cancelled, file will become ".xlsx" and still create a spreadsheet and run the analyzing. This will prevent that.
                 os.remove(workbook) 
                 enableAll(gui)
                 return messagebox.showwarning("No Save/Existing Spreadsheet Name Warning!", "No name has been selected for the spreadsheet you wish to use. Please retry.")
 
-            numTrays = len(trays)
-            numPics = len(pics)
+
             # numPhenos = len(phenos)
 
             # if numPics * numTrays *numPhenos > 8 or numPics * numPhenos * numTrays> 8 or numPhenos * numTrays * numPics> 8:
@@ -660,22 +750,22 @@ def main():
                 return messagebox.showwarning("Input Warning!", "Current inputs from Tray/Pictures entry fields will spawn too many threads. Use the following as a guide for entering data into tray/pictures entry fields: trays * pictures <= 8.")
         
         # print(workbook)
+            messagebox.showinfo("Successful Verification!", "Data has been successfully verified. The analyzing process will now begin.")
 
             for i in range(len(trays)):
                 for j in range(len(pics)):
-                        t = thr.Thread(target = threadHandler, args = [date, trays[i], pics[j], workbook]) 
-                        threads.append(t)
-                        t.start()
-                    # for p in range(len(phenos)):
-                        # t = thr.Thread(target = threadHandler, args = [date, trays[i], pics[j], phenos[p], workbook])
-            
+                    t = thr.Thread(target = threadHandler, args = [date, trays[i], pics[j], workbook]) 
+                    threads.append(t)
+                    t.start()
+
             for  t in threads:
                 t.join()
-
-
+        
+           
+            
         enableAll(gui)
-
-        print("Complete.")
+    
+        print("Analyzing Complete.")
         return
                 
     
