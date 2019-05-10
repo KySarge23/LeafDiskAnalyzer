@@ -1,4 +1,4 @@
- #!/usr/bin/env python3
+     #!/usr/bin/env python3
 
 #Imports that dont need to be installed via pip
 import math
@@ -383,7 +383,7 @@ def main():
             root.destroy()
 
     root.bind("<Escape>", exitWindow)
-    gui = GUITest.analyzerGUI(root) #create new instance of the analyzerGUI with root as master.
+    gui = GUI.analyzerGUI(root) #create new instance of the analyzerGUI with root as master.
 
     trays, pics, threads = [], [], []
     workbook = ""
