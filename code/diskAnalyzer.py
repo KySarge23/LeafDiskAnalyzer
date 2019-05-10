@@ -1,4 +1,4 @@
-     #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 #Imports that dont need to be installed via pip
 import math
@@ -258,7 +258,7 @@ def threadHandler(date, trayNum, picNum, spreadsheet):
         endTime = time.perf_counter()
         totalTime = endTime - startTime
         
-        if mildewRatio < -1:
+        if mildewRatio <= -1:
             return
 
         if totalTime > 10: return print("Timeout in: " + thr.current_thread().getName() + " with runtime of: " +str(totalTime) +"s.")
