@@ -213,7 +213,6 @@ def calculateMildewArea(path):
 
     return (blobAreaFound/leafDiskAreaAfterBR) * 100
 
-
 def threadHandler(date, trayNum, picNum, spreadsheet):
     """
     
@@ -355,12 +354,10 @@ def getNumbers(input):
         nums.append(n1)
         return nums
 
-
 def date():
     global datePicker
     datePicker = cp.DatePicker(format_str="%01d-%02d-%02d")
     
-
 def returnDate():
     return datePicker.date
 
@@ -511,7 +508,6 @@ def main():
         gui.r2.config(state = 'normal')
         return
 
-
     def sendToAnalyzer():
         """
         Function to send data from GUI fields to diskAnalyzer. We grab the GUI fields' values and strip any 
@@ -583,7 +579,6 @@ def main():
         print("Analyzing Complete.")
         return
                 
-    
     uploadBtn = tk.Button(root, text= "Analyze", command=sendToAnalyzer, height = 1, width = 10)
     uploadBtn.grid(row= 5, column = 0)    
 
