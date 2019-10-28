@@ -14,6 +14,7 @@ import numpy as np
 #Imports that need to be installed via pip:
 import cv2 as cv #opencv-python
 import openpyxl, openpyxl.styles #openpyxl
+import skimage #scikit-image and scipy
 
 #--------------------------------------------#
 
@@ -24,15 +25,19 @@ import calendarPicker as cp
 #--------------------------------------------#
 
 #Specific functionality imports
+from math import sqrt
+from math import pi
 from pathlib import Path as pth
 from tkinter.filedialog import askopenfilename, asksaveasfilename
 from tkinter import messagebox
+from skimage import data
+from skimage.feature import blob_log
 
 #--------------------------------------------#
 
 
 # Author(s): Kyle Sargent, Connor Jansen, Colton Eddy, Alex Wilson, Emily Box
-# Version: 1
+# Version: 2.0
 
 
 # -----------------------------------------------------------------------------------------------------------------
@@ -133,23 +138,14 @@ def backgroundRemove(img):
     fgdModel = np.zeros((1,65),np.float64)
 
     #create Rect The object must lie witin
-    rect = (2,0,width-5,height)
-    cv.grabCut(img,mask,rect,bgdModel,fgdModel,4,cv.GC_INIT_WITH_RECT)
+    rect = (2,0,width-10,height)
+    cv.grabCut(img,mask,rect,bgdModel,fgdModel,100,cv.GC_INIT_WITH_RECT)
     mask = np.where((mask==2)|(mask==0),0,1).astype('uint8')
-    img1 = img*mask[:,:,np.newaxis]
+    final = img*mask[:,:,np.newaxis]
 
-    #Get the background
-    background = img - img1
-
-    #Change all pixels in the background to what ever color you want
-    #I went with Red because of high contast with the green leaf disk
-    background[np.where((background > [0,0,0]).all(axis = 2))] = [0,0,0]
-
-    #Add the background and the image
-    final = background + img1
     return final
 
-def calculateMildew(path):
+def calculateMildewArea(path):
     """
     
     Area finding function, Will utilize HoughCircle method to detect circles
@@ -157,8 +153,8 @@ def calculateMildew(path):
     it. After the hsv is completed, Edge Detection is ran on the newly hsv filtered photo. After Edge detection, contouring is performed for  
 
     Input(s): path (String)
-    Output(s): mildewRatio (int)
-    Local Variable(s): img/cimg/hsv/mask/res/edges (numpy ndarray), height/width/area/rad/channel/mildewRatio/cont/contArea (int), hsvValues (array of ints), 
+    Output(s): mildewEdgeArea (int)
+    Local Variable(s): img/cimg/hsv/mask/res/edges (numpy ndarray), height/width/area/rad/channel/mildewEdgeArea/cont/contArea (int), hsvValues (array of ints), 
                        lower_green/upper_green/contours/hierarchy (nparray
 
     """
@@ -172,56 +168,50 @@ def calculateMildew(path):
     if h > 280 and w > 423:
         img = cv.resize(img,(423,280)) #resize image, for easier reading and faster execution.
    
-    img = cv.medianBlur(img,5) #add blur to reduce noise on photo.
-    cimg = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     
-    img = backgroundRemove(img)
-
-    center = (int(w / 2), int(h / 2))
-    rad = 205
-    cv.circle(cimg, center, rad, (0,0,255), 2)
-
-    area = math.pi * rad ** 2 
-
-    img = img[0:h, 0:w]
+    try:
+        img = backgroundRemove(img)
+    except:
+        img = cv.cvtColor(img, cv.COLOR_BGRA2BGR)
+        img = backgroundRemove(img)
+        
+    img = cv.medianBlur(img,3) #add blur to reduce noise on photo.
 
     hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
 
-    height, width, channel= hsv.shape
+    height, width = hsv.shape[:2]
 
-    #adding hsv values to list
-    hsvValues = []
+    #check how many pixels are now black after BR   
+    leafDiskAreaAfterBR = 0
     for x in range(0, width):
         for y in range(0, height):
-            pixel= hsv[y, x]
-            #print(pixel)
-            hsvValues.append(pixel)
+            pixel= img[y, x]
+            if(np.any(pixel > np.array([0,0,0]))):
+                leafDiskAreaAfterBR +=1
 
     #darker colors (to mask out)
-    lower_green = np.array([0,0, 165])
+    lower_green = np.array([0,0, 180])
     #lighter colors
     upper_green = np.array([255, 255, 255])
 
     #masking pixels to remove irrelevant data
     mask = cv.inRange(hsv, lower_green, upper_green)
-    res = cv.bitwise_and(img, img, mask=mask)
+    res = cv.bitwise_and(img, img, mask=mask) 
 
-    hsvMask = cv.inRange(hsv, lower_green, upper_green)
-    res = cv.bitwise_and(img, img, mask=hsvMask)
+    resGrey = cv.cvtColor(res, cv.COLOR_BGR2GRAY)
 
-    edges = cv.Canny(res,350,700)
+    blobs = blob_log(resGrey, max_sigma=30, num_sigma=10, threshold=.091)
 
-    ret, edges = cv.threshold(edges,130,255,cv.ADAPTIVE_THRESH_MEAN_C)
-    mask = np.zeros(edges.shape,np.uint8)
+    # Compute radii in the 3rd column.
+    blobs[:, 2] = blobs[:, 2] * sqrt(2)
 
-    contours, hierarchy = cv.findContours(edges, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
+    #loop through each blob found above and compute area of circle to be drawn from given radius.
+    blobAreaFound = 0
+    for blob in blobs:
+        y, x, r = blob
+        blobAreaFound += pi * (r**2)
 
-    mildewRatio = 0
-    for cont in contours:
-        contArea = cv.contourArea(cont)
-        mildewRatio += contArea
-
-    return mildewRatio / area * 100
+    return (blobAreaFound/leafDiskAreaAfterBR) * 100
 
 
 def threadHandler(date, trayNum, picNum, spreadsheet):
@@ -235,7 +225,7 @@ def threadHandler(date, trayNum, picNum, spreadsheet):
 
     Input(s): date (String) , tray (int), picNum (int)
     Output(s): None
-    Local Variable(s): path (String), dirName (String) , fName (String), circArea (int), mildewRatio (int), mildewRatio (int)
+    Local Variable(s): path (String), dirName (String) , fName (String), circArea (int), mildewEdgeArea (int), mildewEdgeArea (int)
 
     """
 
@@ -245,7 +235,7 @@ def threadHandler(date, trayNum, picNum, spreadsheet):
     tray = '/tray '+ str(trayNum)
     dirName = date + tray + "/"
     try:
-        photo = glob.glob(dirName + str(picNum) +"-160x271_"+ "*", recursive=True)[0]
+        photo = glob.glob(dirName + str(picNum) +"-"+ "*", recursive=True)[0]
     except:
         print("Path cannot be found! A path cannot be found for photo: " + str(picNum) + " in tray: " + str(trayNum) + " from the date: " + date[10:] +".")
         return
@@ -254,19 +244,18 @@ def threadHandler(date, trayNum, picNum, spreadsheet):
     
     if os.path.exists(path):
         startTime = time.perf_counter()
-        mildewRatio = calculateMildew(path)
+        mildewEdgeArea = calculateMildewArea(path)
         endTime = time.perf_counter()
         totalTime = endTime - startTime
         
-        if mildewRatio <= -1:
-            return
+        if mildewEdgeArea <= -1: return
 
-        if totalTime > 10: return print("Timeout in: " + thr.current_thread().getName() + " with runtime of: " +str(totalTime) +"s.")
-      
+        if totalTime > 1000: return print("Timeout in: " + thr.current_thread().getName() + " with runtime of: " +str(totalTime) +"s.")
+
         thrLock.acquire()
-        writeToExcel(mildewRatio, spreadsheet, tray[1:], date[10:], picNum)
+        writeToExcel(mildewEdgeArea, spreadsheet, tray[1:], date[10:], picNum)
         print(thr.current_thread().getName() + " returning.")
-        print("Mildew to leaf ratio is: " + str(mildewRatio) + "%")
+        print("Mildew to leaf ratio is: " + str(mildewEdgeArea) + "%")
         thrLock.release()
         return 
 
@@ -433,7 +422,7 @@ def main():
 
                 wb.save(file)
                 return file
-
+                
     def validateTP(x,y):
         """
 
@@ -454,7 +443,6 @@ def main():
         if x == "" and y == "":
             messagebox.showwarning("No Entry Warning!", "No entry found in the Tray and Picture Entry Fields. Please enter data in the following format: '1-3' or '1,2,3'.")
             return False
-
         elif x == "":
             messagebox.showwarning("No Entry Warning!", "No entry found in the Tray Entry Field. Please enter data in the following format: '1-3' or '1,2,3'.")
             return False
@@ -468,9 +456,9 @@ def main():
                 countx += 1
             else:
                 messagebox.showwarning("Entry warning!", "Incorrect character of: '" + i + "' in Tray Entry Field. Please enter in the following format: '1-3' or '1,2,3'.")
-                gui.trayEntry.delete(0,tk.END)                
+                gui.trayEntry.delete(0,tk.END)
+                return False   
 
-                return False     
         for o in y:
             if o.isdigit() or o == '-' or o == ',':
                 county += 1
@@ -590,8 +578,6 @@ def main():
             for  t in threads:
                 t.join()
         
-           
-            
         enableAll(gui)
     
         print("Analyzing Complete.")
