@@ -37,7 +37,7 @@ from skimage.feature import blob_log
 
 
 # Author(s): Kyle Sargent, Connor Jansen, Colton Eddy, Alex Wilson, Emily Box
-# Version: 1
+# Version: 2
 
 
 # -----------------------------------------------------------------------------------------------------------------
@@ -138,20 +138,11 @@ def backgroundRemove(img):
     fgdModel = np.zeros((1,65),np.float64)
 
     #create Rect The object must lie witin
-    rect = (2,0,width,height)
-    cv.grabCut(img,mask,rect,bgdModel,fgdModel,10,cv.GC_INIT_WITH_RECT)
+    rect = (2,0,width-10,height)
+    cv.grabCut(img,mask,rect,bgdModel,fgdModel,100,cv.GC_INIT_WITH_RECT)
     mask = np.where((mask==2)|(mask==0),0,1).astype('uint8')
-    img1 = img*mask[:,:,np.newaxis]
+    final = img*mask[:,:,np.newaxis]
 
-    #Get the background
-    background = img - img1
-
-    #Change all pixels in the background to what ever color you want
-    #I went with Red because of high contast with the green leaf disk
-    background[np.where((background > [0,0,0]).all(axis = 2))] = [0,0,0]
-
-    #Add the background and the image
-    final = background + img1
     return final
 
 def calculateMildewArea(path):
@@ -177,29 +168,20 @@ def calculateMildewArea(path):
     if h > 280 and w > 423:
         img = cv.resize(img,(423,280)) #resize image, for easier reading and faster execution.
    
-    img = cv.medianBlur(img,3) #add blur to reduce noise on photo.
-        
     
     try:
-        image = backgroundRemove(image)
+        img = backgroundRemove(img)
     except:
-        image = cv.cvtColor(image, cv.COLOR_BGRA2BGR)
-        # cv.imshow("new photo", image)
-        image = backgroundRemove(image)
-        # cv.imshow("Background removed", image)
-        # cv.waitKey(0)
-        # cv.destroyAllWindows()
-    # cv.imshow('Background Removed', img)
-    # cv.waitKey(0)
-    # cv.destroyAllWindows()
-
-    img = img[0:h, 0:w]
+        img = cv.cvtColor(img, cv.COLOR_BGRA2BGR)
+        img = backgroundRemove(img)
+        
+    img = cv.medianBlur(img,3) #add blur to reduce noise on photo.
 
     hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
 
-    height, width, channel= hsv.shape
+    height, width = hsv.shape[:2]
 
-    # remove background from pixel count    
+    #check how many pixels are now black after BR   
     leafDiskAreaAfterBR = 0
     for x in range(0, width):
         for y in range(0, height):
@@ -208,22 +190,13 @@ def calculateMildewArea(path):
                 leafDiskAreaAfterBR +=1
 
     #darker colors (to mask out)
-    lower_green = np.array([0,0, 175])
+    lower_green = np.array([0,0, 180])
     #lighter colors
     upper_green = np.array([255, 255, 255])
 
     #masking pixels to remove irrelevant data
     mask = cv.inRange(hsv, lower_green, upper_green)
-    res = cv.bitwise_and(img, img, mask=mask)
-
-    
-    # #show image (for testing purposes)
-    # cv.imshow('res1.png', res)
-    # cv.waitKey(0)
-    # cv.destroyAllWindows()
-
-    # cv.imwrite(path[47:58] +"BlobDetection" +".png", res)
-    
+    res = cv.bitwise_and(img, img, mask=mask) 
 
     resGrey = cv.cvtColor(res, cv.COLOR_BGR2GRAY)
 
@@ -232,13 +205,11 @@ def calculateMildewArea(path):
     # Compute radii in the 3rd column.
     blobs[:, 2] = blobs[:, 2] * sqrt(2)
 
+    #loop through each blob found above and compute area of circle to be drawn from given radius.
     blobAreaFound = 0
     for blob in blobs:
         y, x, r = blob
-        # print(r)
         blobAreaFound += pi * (r**2)
-
-    # print(blobAreaFound)
 
     return (blobAreaFound/leafDiskAreaAfterBR) * 100
 
@@ -264,7 +235,7 @@ def threadHandler(date, trayNum, picNum, spreadsheet):
     tray = '/tray '+ str(trayNum)
     dirName = date + tray + "/"
     try:
-        photo = glob.glob(dirName + str(picNum) +"-160x271_"+ "*", recursive=True)[0]
+        photo = glob.glob(dirName + str(picNum) +"-"+ "*", recursive=True)[0]
     except:
         print("Path cannot be found! A path cannot be found for photo: " + str(picNum) + " in tray: " + str(trayNum) + " from the date: " + date[10:] +".")
         return
@@ -277,11 +248,10 @@ def threadHandler(date, trayNum, picNum, spreadsheet):
         endTime = time.perf_counter()
         totalTime = endTime - startTime
         
-        if mildewEdgeArea <= -1:
-            return
+        if mildewEdgeArea <= -1: return
 
         if totalTime > 1000: return print("Timeout in: " + thr.current_thread().getName() + " with runtime of: " +str(totalTime) +"s.")
-      
+
         thrLock.acquire()
         writeToExcel(mildewEdgeArea, spreadsheet, tray[1:], date[10:], picNum)
         print(thr.current_thread().getName() + " returning.")
@@ -452,7 +422,7 @@ def main():
 
                 wb.save(file)
                 return file
-
+                
     def validateTP(x,y):
         """
 
@@ -473,7 +443,6 @@ def main():
         if x == "" and y == "":
             messagebox.showwarning("No Entry Warning!", "No entry found in the Tray and Picture Entry Fields. Please enter data in the following format: '1-3' or '1,2,3'.")
             return False
-
         elif x == "":
             messagebox.showwarning("No Entry Warning!", "No entry found in the Tray Entry Field. Please enter data in the following format: '1-3' or '1,2,3'.")
             return False
@@ -487,9 +456,9 @@ def main():
                 countx += 1
             else:
                 messagebox.showwarning("Entry warning!", "Incorrect character of: '" + i + "' in Tray Entry Field. Please enter in the following format: '1-3' or '1,2,3'.")
-                gui.trayEntry.delete(0,tk.END)                
+                gui.trayEntry.delete(0,tk.END)
+                return False   
 
-                return False     
         for o in y:
             if o.isdigit() or o == '-' or o == ',':
                 county += 1
@@ -609,8 +578,6 @@ def main():
             for  t in threads:
                 t.join()
         
-           
-            
         enableAll(gui)
     
         print("Analyzing Complete.")

@@ -3,7 +3,7 @@ from math import pi
 from skimage import data
 from skimage.feature import blob_dog, blob_log, blob_doh
 from skimage.color import rgb2gray
-from tkinter.filedialog import askopenfilename, asksaveasfilename
+from tkinter.filedialog import askopenfilename, askopenfilenames, asksaveasfilename
 
 import matplotlib.pyplot as plt
 import skimage
@@ -27,15 +27,17 @@ def backgroundRemove(img):
     mask = np.where((mask==2)|(mask==0),0,1).astype('uint8')
     final = img*mask[:,:,np.newaxis]
 
-    cv.imshow("im1", final)
-    cv.waitKey(0)
-    cv.destroyAllWindows()
+    # cv.imshow("im1", final)
+    # cv.waitKey(0)
+    # cv.destroyAllWindows()
 
     return final
 
 
 root = tk.Tk()
 root.withdraw() 
+
+
 
 image = skimage.io.imread(askopenfilename(initialdir = "../photos", title = "Choose Photo"))
 
@@ -45,7 +47,7 @@ h,w = image.shape[:2]
 
 if h > 280 and w > 423:
         image = cv.resize(image,(423,280)) #resize image, for easier reading and faster execution.
-   
+
 try:
     image = backgroundRemove(image)
 except:
@@ -66,7 +68,7 @@ hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
 # cv.destroyAllWindows()
 
 #darker colors (to mask out)
-lower_green = np.array([0,0, 170])
+lower_green = np.array([0,0, 180])
 #lighter colors
 upper_green = np.array([255, 255, 255])
 
@@ -76,11 +78,11 @@ res = cv.bitwise_and(image, image, mask=mask)
 
 image_gray = rgb2gray(res)
 
-cv.imshow('gray mildew', image_gray)
-cv.waitKey(0)
-cv.destroyAllWindows()
+# cv.imshow('gray mildew', image_gray)
+# cv.waitKey(0)
+# cv.destroyAllWindows()
 
-blobs_log = blob_log(image_gray, max_sigma=30, num_sigma=10, threshold=0.085)
+blobs_log = blob_log(image_gray, max_sigma=30, num_sigma=10, threshold=0.091)
 # Compute radii in the 3rd column.
 blobs_log[:, 2] = blobs_log[:, 2] * sqrt(2)
 
@@ -92,7 +94,7 @@ blobs_doh = blob_doh(image_gray, max_sigma=30, threshold=.075)
 blobs_list = [blobs_log, blobs_dog, blobs_doh]
 colors = ['yellow', 'lime', 'red']
 titles = ['Laplacian of Gaussian', 'Difference of Gaussian',
-          'Determinant of Hessian']
+        'Determinant of Hessian']
 sequence = zip(blobs_list, colors, titles)
 
 fig, axes = plt.subplots(1, 3, figsize=(9, 3), sharex=True, sharey=True)
@@ -119,6 +121,7 @@ for idx, (blobs, color, title) in enumerate(sequence):
 
 plt.tight_layout()
 plt.show()
+
 
 root.mainloop()
 root.destroy()
