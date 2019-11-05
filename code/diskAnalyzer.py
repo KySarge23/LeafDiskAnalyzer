@@ -66,7 +66,7 @@ from skimage.feature import blob_log
 
 thrLock = thr.Lock()
 
-def writeToExcel(value, workbookName, sheet, date, picNum,): #phenoNum):
+def writeToExcel(value, workbookName, sheet, date, picNum,):
     """
 
     This function will handle any writing to the spreadsheet document that is required.
@@ -400,7 +400,6 @@ def main():
                 wb = openpyxl.Workbook()
                 rm = wb['Sheet']
                 wb.remove(rm)
-
                 for tray in trays:
                     ws = wb.create_sheet("tray " + str(tray))
                 
