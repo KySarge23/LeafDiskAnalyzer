@@ -109,7 +109,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.""")
         def clearDateEntry(event):
             self.dateEntry.delete(0,tk.END)
 
-
         self.trayLabel = Label(master, text= "Tray Number(s):" )
         self.trayLabel.grid(row = 1, column = 0, pady = (0,10))
         self.trayEntry = Entry(master)
@@ -124,17 +123,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.""")
         self.picEntry.insert(0,"Placeholder: '1-3'")
         self.picEntry.bind("<Button-1>", clearPicEntry)
 
-        # self.phenoLabel = Label(master, text = "Phenotype(s):")
-        # self.phenoLabel.grid(row = 3 , column = 0, pady = (0,10))
-        # self.phenoEntry = Entry(master)
-        # self.phenoEntry.insert(0, "Placeholder: '1-3'")
-        # self.phenoEntry.grid(row = 3, column = 1, pady = (0,10))
-
         self.dateLabel= Label(master, text="Date:")
         self.dateLabel.grid(row = 3, column= 0, pady=(0,60))
         self.calendarBtn = tk.Button(master, text="Pick a Date")
         self.calendarBtn.grid(row = 3, column = 1, pady = (0,60))
-        # self.dateEntry = Entry(master)
-        # self.dateEntry.insert(0, "Placeholder: 'mm-dd-yy'")
-        # self.dateEntry.grid(row = 4, column = 1, pady = (0,60))
-        # self.dateEntry.bind("<Button-1>", clearDateEntry)
